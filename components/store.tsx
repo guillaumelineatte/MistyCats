@@ -59,7 +59,7 @@ export function Store() {
                   Horaires
                 </h3>
                 <div className="text-muted-foreground text-base space-y-1">
-                  <p>Samedi: 14h00 - 19h00</p>
+                  <p>Mardi: 14h00 - 19h00</p>
                   <p>Mercredi - Samedi: 11h00 - 19h00</p>
                 </div>
               </div>
@@ -85,10 +85,7 @@ export function Store() {
             {/* CTA Button */}
             <div className="pt-6">
               <a
-                href="https://www.google.com/local/place/fid/0x47e78523c58599d7:0xa7df40289e41d279/photosphere?iu=
-                https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid%3DH_-YNGU2GWFvXU3F7EZg_A%26cb_client%
-                3Dsearch.gws-prod.gps%26yaw%3D107.43677%26pitch%3D0%26thumbfov%3D100%26w%3D0%26h%3D0&ik=CAISFkhfLVlO
-                R1UyR1dGdlhVM0Y3RVpnX0E%3D&sa=X&ved=2ahUKEwjD1veu3YaSAxWEK_sDHY5tGsIQpx96BAhCEBA"
+                href="https://www.google.com/maps/place/7+Rue+Lamarck,+80000+Amiens/@49.8914112,2.2966534,17z/data=!3m1!4b1!4m6!3m5!1s0x47e7844723212ac3:0xc04cffc0ed61655d!8m2!3d49.8914112!4d2.2992283!16s%2Fg%2F11xgftn_20?entry=ttu&g_ep=EgoyMDI2MDQyMC4wIKXMDSoASAFQAw%3D%3D"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block px-8 py-3 bg-primary text-primary-foreground font-semibold tracking-widest uppercase text-sm rounded-lg hover:bg-primary/90 transition-all duration-300 hover:shadow-lg"

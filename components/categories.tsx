@@ -62,7 +62,7 @@ export function Categories() {
           {categories.map((category, index) => (
             <Link
               key={category.name}
-              href={`/boutique/${category.name.toLowerCase().replace(/['\s]/g, "-")}`}
+              href={`/boutique?categorie=${encodeURIComponent(category.name)}`}
               className={`group relative aspect-[5/7] overflow-hidden transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
               style={{ transitionDelay: `${200 + index * 100}ms` }}
             >

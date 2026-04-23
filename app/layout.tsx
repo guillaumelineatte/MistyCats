@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Cormorant_Garamond, Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { SessionProvider } from "@/components/admin/session-provider"
 import "./globals.css"
 
 const cormorant = Cormorant_Garamond({
@@ -33,7 +34,9 @@ export default function RootLayout({
         <link rel="icon" href="/favori-icon.png" type="image/png" sizes="any" />
       </head>
       <body className={`${cormorant.variable} ${inter.variable} font-serif antialiased overflow-x-hidden`}>
-        {children}
+        <SessionProvider>
+          {children}
+        </SessionProvider>
         <Analytics />
       </body>
     </html>

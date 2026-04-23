@@ -3,6 +3,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
+html {
+  scroll-padding-top: 80px;
+}
+
 :root {
   /* Misty Cats - Elegant eco-conscious palette */
   --background: oklch(0.98 0.005 80); /* Warm off-white cream */
