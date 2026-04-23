@@ -1,64 +1,41 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ProductCard } from "@/components/product-card"
 
-const products = [
-  {
-    id: 1,
-    name: "Boucles Aurore",
-    price: 48,
-    image: "/elegant-gold-upcycled-earrings-on-cream-background.jpg",
-    category: "Boucles d'oreilles",
-    isNew: true,
-  },
-  {
-    id: 2,
-    name: "Collier Éclipse",
-    price: 72,
-    image: "/delicate-silver-pendant-necklace-with-recycled-mat.jpg",
-    category: "Colliers",
-    isNew: false,
-  },
-  {
-    id: 3,
-    name: "Bracelet Ondine",
-    price: 56,
-    image: "/handcrafted-copper-bracelet-upcycled-jewelry-on-na.jpg",
-    category: "Bracelets",
-    isNew: true,
-  },
-  {
-    id: 4,
-    name: "Bague Solstice",
-    price: 42,
-    image: "/unique-vintage-inspired-ring-upcycled-materials-ar.jpg",
-    category: "Bagues",
-    isNew: false,
-  },
-]
+interface Article {
+  id: string
+  title: string
+  price: number
+  image: string
+  category: string
+  createdAt: Date
+}
 
-export function FeaturedCollection() {
+interface FeaturedCollectionProps {
+  articles: Article[]
+}
+
+const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000
+
+export function FeaturedCollection({ articles }: FeaturedCollectionProps) {
   const [isVisible, setIsVisible] = useState(false)
   const sectionRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true)
-        }
+        if (entry.isIntersecting) setIsVisible(true)
       },
       { threshold: 0.1 },
     )
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current)
-    }
-
+    if (sectionRef.current) observer.observe(sectionRef.current)
     return () => observer.disconnect()
   }, [])
+
+  if (articles.length === 0) return null
 
   return (
     <section ref={sectionRef} className="py-16 sm:py-24 md:py-32">
@@ -77,21 +54,31 @@ export function FeaturedCollection() {
             </h2>
           </div>
           <Button
+            asChild
             variant="link"
             className={`mt-4 md:mt-0 text-xs sm:text-sm tracking-widest uppercase p-0 h-auto transition-all duration-700 delay-200 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
           >
-            Voir toute la collection →
+            <Link href="/boutique">Voir toute la collection →</Link>
           </Button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-          {products.map((product, index) => (
+          {articles.map((article, index) => (
             <div
-              key={product.id}
+              key={article.id}
               className={`transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
               style={{ transitionDelay: `${300 + index * 100}ms` }}
             >
-              <ProductCard product={product} />
+              <ProductCard
+                product={{
+                  id: article.id,
+                  name: article.title,
+                  price: article.price,
+                  image: article.image,
+                  category: article.category,
+                  isNew: Date.now() - new Date(article.createdAt).getTime() < THIRTY_DAYS,
+                }}
+              />
             </div>
           ))}
         </div>

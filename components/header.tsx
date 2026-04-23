@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { Menu, X, ShoppingBag, Search, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 const navLinks = [
   { href: "#notre-histoire", label: "Notre Histoire" },
-  { href: "#collection", label: "Boutique" },
+  { href: "/boutique", label: "Boutique" },
   { href: "#categories", label: "Collections" },
   { href: "#magasin", label: "Magasin" },
   { href: "#avis", label: "Avis" },
@@ -17,6 +19,9 @@ const navLinks = [
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const pathname = usePathname()
+  const router = useRouter()
+  const { data: session } = useSession()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,14 +37,40 @@ export function Header() {
 
   const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>) => {
     const href = e.currentTarget.getAttribute("href")
-    if (href?.startsWith("#")) {
-      e.preventDefault()
-      const element = document.querySelector(href)
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "start" })
-      }
+    if (!href || !href.startsWith("#")) return
+
+    e.preventDefault()
+    setIsOpen(false)
+
+    // Depuis une autre page : naviguer vers la homepage avec l'ancre
+    if (pathname !== "/") {
+      router.push(`/${href}`)
+      return
     }
-    handleNavClick()
+
+    // Sur la homepage : scroll fluide avec easing personnalisé
+    const target = document.querySelector(href) as HTMLElement | null
+    if (!target) return
+
+    const headerHeight = scrolled ? 60 : 80
+    const targetTop = target.getBoundingClientRect().top + window.scrollY - headerHeight
+    const startTop = window.scrollY
+    const distance = targetTop - startTop
+    const duration = Math.min(900, Math.max(500, Math.abs(distance) * 0.4))
+    const startTime = performance.now()
+
+    function easeInOutCubic(t: number) {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+    }
+
+    function step(now: number) {
+      const elapsed = now - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      window.scrollTo(0, startTop + distance * easeInOutCubic(progress))
+      if (progress < 1) requestAnimationFrame(step)
+    }
+
+    requestAnimationFrame(step)
   }
 
   return (
@@ -92,8 +123,10 @@ export function Header() {
             <Button variant="ghost" size="icon" className="hidden md:flex hover:bg-secondary h-9 w-9 sm:h-10 sm:w-10">
               <Search className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="hidden md:flex hover:bg-secondary h-9 w-9 sm:h-10 sm:w-10">
-              <User className="h-4 w-4 sm:h-5 sm:w-5" />
+            <Button variant="ghost" size="icon" className="flex hover:bg-secondary h-9 w-9 sm:h-10 sm:w-10" asChild>
+              <Link href={session?.user ? "/mon-compte" : "/login"} aria-label="Mon compte">
+                <User className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Link>
             </Button>
             <Button variant="ghost" size="icon" className="relative hover:bg-secondary h-9 w-9 sm:h-10 sm:w-10">
               <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5" />
