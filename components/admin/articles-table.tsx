@@ -106,9 +106,9 @@ function SortableRow({
       </TableCell>
 
       <TableCell className="font-medium">{article.title}</TableCell>
-      <TableCell className="text-sm text-muted-foreground">{article.category}</TableCell>
+      <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">{article.category}</TableCell>
       <TableCell className="text-sm">{article.price.toFixed(2)} €</TableCell>
-      <TableCell className="text-sm">{article.stock}</TableCell>
+      <TableCell className="hidden md:table-cell text-sm">{article.stock}</TableCell>
       <TableCell><StatusBadge published={article.published} /></TableCell>
 
       {/* Actions */}
@@ -244,9 +244,9 @@ export function ArticlesTable({ articles: initialArticles }: { articles: Article
                 <TableHead className="w-12" />
                 <TableHead className="w-16 text-xs tracking-wider uppercase">Image</TableHead>
                 <TableHead className="text-xs tracking-wider uppercase">Titre</TableHead>
-                <TableHead className="text-xs tracking-wider uppercase">Catégorie</TableHead>
+                <TableHead className="hidden sm:table-cell text-xs tracking-wider uppercase">Catégorie</TableHead>
                 <TableHead className="text-xs tracking-wider uppercase">Prix</TableHead>
-                <TableHead className="text-xs tracking-wider uppercase">Stock</TableHead>
+                <TableHead className="hidden md:table-cell text-xs tracking-wider uppercase">Stock</TableHead>
                 <TableHead className="text-xs tracking-wider uppercase">Statut</TableHead>
                 <TableHead className="text-right text-xs tracking-wider uppercase">Actions</TableHead>
               </TableRow>
