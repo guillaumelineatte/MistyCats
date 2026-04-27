@@ -13,7 +13,7 @@ export function Store() {
             Notre Magasin
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto px-2">
-            Visitez notre boutique pour découvrir nos créations en personne et explorer notre collection de bijoux upcyclés.
+            Visitez notre boutique pour découvrir nos créations en personne et explorer notre collection de bijoux upcyclés unique.
           </p>
         </div>
 
