@@ -1,9 +1,10 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
-import { LayoutList, LogOut, ExternalLink } from "lucide-react"
+import { LayoutList, LogOut, ExternalLink, Menu, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
@@ -11,17 +12,26 @@ const navItems = [
   { href: "/admin/articles", label: "Articles", icon: LayoutList },
 ]
 
-export function AdminSidebar() {
+function SidebarContent({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-sidebar border-r border-sidebar-border">
+    <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex h-16 items-center border-b border-sidebar-border px-6">
-        <Link href="/admin/articles" className="font-serif text-lg tracking-widest text-sidebar-foreground uppercase">
+      <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-6">
+        <Link
+          href="/admin/articles"
+          className="font-serif text-lg tracking-widest text-sidebar-foreground uppercase"
+          onClick={onClose}
+        >
           Misty Cats
+          <span className="ml-2 text-xs tracking-wider text-muted-foreground uppercase">Admin</span>
         </Link>
-        <span className="ml-2 text-xs tracking-wider text-muted-foreground uppercase">Admin</span>
+        {onClose && (
+          <button onClick={onClose} className="lg:hidden text-muted-foreground hover:text-foreground">
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
@@ -32,6 +42,7 @@ export function AdminSidebar() {
             <Link
               key={href}
               href={href}
+              onClick={onClose}
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                 isActive
@@ -66,6 +77,49 @@ export function AdminSidebar() {
           Déconnexion
         </Button>
       </div>
-    </aside>
+    </div>
+  )
+}
+
+export function AdminSidebar() {
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  return (
+    <>
+      {/* Sidebar desktop — toujours visible */}
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-60 flex-col bg-sidebar border-r border-sidebar-border">
+        <SidebarContent />
+      </aside>
+
+      {/* Header mobile */}
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-40 flex h-14 items-center justify-between bg-sidebar border-b border-sidebar-border px-4">
+        <Link href="/admin/articles" className="font-serif text-lg tracking-widest text-sidebar-foreground uppercase">
+          Misty Cats
+          <span className="ml-2 text-xs tracking-wider text-muted-foreground uppercase">Admin</span>
+        </Link>
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="text-sidebar-foreground hover:text-foreground p-1"
+          aria-label="Ouvrir le menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+      </header>
+
+      {/* Drawer mobile */}
+      {mobileOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="lg:hidden fixed inset-0 z-50 bg-black/40"
+            onClick={() => setMobileOpen(false)}
+          />
+          {/* Panel */}
+          <div className="lg:hidden fixed inset-y-0 left-0 z-50 w-72 bg-sidebar border-r border-sidebar-border flex flex-col animate-in slide-in-from-left duration-200">
+            <SidebarContent onClose={() => setMobileOpen(false)} />
+          </div>
+        </>
+      )}
+    </>
   )
 }
