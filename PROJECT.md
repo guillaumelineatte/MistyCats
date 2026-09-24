@@ -167,3 +167,12 @@ est `mistycates` (id `square-fire-43209862`).
      `POST /api/payments/:ref/confirm`.
   4. `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` en variables d'environnement, `PAYMENT_WEBHOOK_SECRET` retiré.
   5. `lib/payment/apply-outcome.ts` ne change pas — c'est tout l'intérêt de l'interface.
+- **D8 (24/09/2026, phase 6)** — Expédition et suivi public. `Shipment` créé automatiquement (statut implicite via
+  son premier `ShipmentEvent`, pas de champ statut redondant sur `Shipment` lui-même) dès qu'un paiement réussit
+  (`lib/payment/apply-outcome.ts`), pour que le suivi ait toujours quelque chose à afficher dès la confirmation.
+  Page publique `/suivi` (numéro de commande + email, sans connexion, `POST /api/tracking`, rate-limitée 20/h par
+  IP) affichant la timeline des `ShipmentEvent`. Emails `sendOrderShippedEmail`/`sendOrderDeliveredEmail` ajoutés
+  au layout partagé (`lib/email.ts`) — pas encore déclenchés : la saisie transporteur/numéro de suivi et l'ajout
+  d'événements manuels sont une action admin, phase 8. Vérifié en conditions réelles : achat complet →
+  `Shipment`/premier événement créés → suivi renvoie la bonne timeline → mauvais email rejeté (404 générique,
+  n'indique pas lequel des deux champs est faux).

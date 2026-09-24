@@ -36,6 +36,17 @@ export async function applyPaymentOutcome(event: WebhookEvent): Promise<void> {
 
       await tx.payment.update({ where: { id: payment.id }, data: { status: "SUCCEEDED" } })
       await tx.order.update({ where: { id: payment.orderId }, data: { status: "PAID" } })
+
+      // Toute commande payée entre en préparation : le suivi (phase 6) a
+      // toujours quelque chose à afficher dès la confirmation.
+      await tx.shipment.create({
+        data: {
+          orderId: payment.orderId,
+          events: {
+            create: { status: "PREPARING", label: "Commande confirmée, en cours de préparation" },
+          },
+        },
+      })
     })
   } catch (err) {
     // Rarissime : une pièce est devenue indisponible entre la création de la

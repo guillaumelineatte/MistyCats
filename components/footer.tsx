@@ -11,6 +11,7 @@ const footerLinks = {
   informations: [
     { label: "Notre histoire", href: "/notre-histoire" },
     { label: "L'upcycling", href: "/upcycling" },
+    { label: "Suivre ma commande", href: "/suivi" },
     { label: "FAQ", href: "/faq" },
     { label: "Contact", href: "/contact" },
   ],
