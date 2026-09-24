@@ -110,6 +110,7 @@ export default async function DropPage({ params }: DropPageProps) {
                 key={article.id}
                 product={{
                   id: article.id,
+                  slug: article.slug,
                   name: article.title,
                   priceCents: article.priceCents,
                   image: article.images[0]?.url ?? "",

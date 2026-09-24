@@ -3,25 +3,18 @@
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 
-const categories = [
-  {
-    name: "Boucles d'oreilles",
-    image: "/collection-of-elegant-upcycled-earrings-displayed-.jpg",
-    count: 24,
-  },
-  {
-    name: "Colliers",
-    image: "/beautiful-handcrafted-necklaces-with-recycled-mate.jpg",
-    count: 18,
-  },
-  {
-    name: "Bracelets",
-    image: "/artisan-bracelets-made-from-upcycled-materials-on-.jpg",
-    count: 15,
-  },
-]
+export interface CategoryCard {
+  slug: string
+  name: string
+  image: string | null
+  count: number
+}
 
-export function Categories() {
+interface CategoriesProps {
+  categories: CategoryCard[]
+}
+
+export function Categories({ categories }: CategoriesProps) {
   const [isVisible, setIsVisible] = useState(false)
   const sectionRef = useRef<HTMLElement>(null)
 
@@ -61,20 +54,22 @@ export function Categories() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           {categories.map((category, index) => (
             <Link
-              key={category.name}
-              href={`/boutique?categorie=${encodeURIComponent(category.name)}`}
+              key={category.slug}
+              href={`/boutique?categorie=${encodeURIComponent(category.slug)}`}
               className={`group relative aspect-[5/7] overflow-hidden transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
               style={{ transitionDelay: `${200 + index * 100}ms` }}
             >
               <img
-                src={category.image || "/placeholder.svg"}
+                src={category.image || "/placeholder-product.svg"}
                 alt={category.name}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-foreground/30 group-hover:bg-foreground/40 transition-colors duration-300" />
               <div className="absolute inset-0 flex flex-col items-center justify-center text-background">
                 <h3 className="text-xl sm:text-2xl md:text-3xl font-light tracking-wide mb-1 sm:mb-2">{category.name}</h3>
-                <span className="text-xs sm:text-sm tracking-widest opacity-80">{category.count} pièces</span>
+                <span className="text-xs sm:text-sm tracking-widest opacity-80">
+                  {category.count} pièce{category.count !== 1 ? "s" : ""}
+                </span>
                 <span className="mt-4 sm:mt-6 text-xs sm:text-sm tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-300 border-b border-background pb-1">
                   Découvrir
                 </span>

@@ -16,11 +16,28 @@ const inter = Inter({
   variable: "--font-inter",
 })
 
+const description =
+  "Bijoux artisanaux créés à partir de matériaux upcyclés. Un style unique alliant élégance et engagement écologique."
+
 export const metadata: Metadata = {
-  title: "Misty Cats | Bijoux Upcyclés",
-  description:
-    "Bijoux artisanaux créés à partir de matériaux upcyclés. Un style unique alliant élégance et engagement écologique.",
-  keywords: ["bijoux", "upcycling", "écologique", "artisanal", "durable", "mode éthique"],
+  metadataBase: new URL(process.env.AUTH_URL ?? "http://localhost:3000"),
+  title: {
+    default: "Misty Cats | Bijoux Upcyclés",
+    template: "%s | Misty Cats",
+  },
+  description,
+  openGraph: {
+    title: "Misty Cats | Bijoux Upcyclés",
+    description,
+    siteName: "Misty Cats",
+    locale: "fr_FR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Misty Cats | Bijoux Upcyclés",
+    description,
+  },
 }
 
 export default function RootLayout({

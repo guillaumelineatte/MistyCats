@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/product-card"
 
 interface Article {
   id: string
+  slug: string
   title: string
   priceCents: number
   image: string
@@ -72,6 +73,7 @@ export function FeaturedCollection({ articles }: FeaturedCollectionProps) {
               <ProductCard
                 product={{
                   id: article.id,
+                  slug: article.slug,
                   name: article.title,
                   priceCents: article.priceCents,
                   image: article.image,

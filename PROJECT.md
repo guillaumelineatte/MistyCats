@@ -112,3 +112,13 @@ est `mistycates` (id `square-fire-43209862`).
   `secure` (prod) explicite dans `lib/auth.config.ts` — pas de librairie de token CSRF séparée (voir raisonnement
   dans le plan de session). Événements loggés en JSON sur stdout (`lib/auth-log.ts`) : register, login
   success/failure, email vérifié, password reset demandé/complété, password changé.
+- **D5 (24/09/2026, phase 3)** — Dernières données en dur remplacées par de vraies requêtes : compteurs de
+  catégories sur l'accueil (`components/categories.tsx`, prenait 24/18/15 en dur), image de catégorie = première
+  image d'une pièce `ONLINE` de cette catégorie. Fiche produit publique créée
+  (`app/boutique/produit/[slug]/page.tsx`, absente jusqu'ici — `AUDIT.md` lot 4.1), avec `generateMetadata` +
+  JSON-LD `Product`, galerie multi-image, champs métier (histoire, matières, dimensions, longueur de chaîne, poids).
+  Cartes produit (`components/product-card.tsx`) rendues cliquables (lien vers la fiche, jusqu'ici `cursor-pointer`
+  sans action). Bouton panier présent mais désactivé sur la fiche produit — branché en phase 4, même logique que
+  `/mon-compte/commandes` (« Bientôt », choix assumé plutôt qu'un bouton mort). `app/sitemap.ts`/`app/robots.ts`
+  ajoutés (absents jusqu'ici), balise `keywords` retirée (ignorée par les moteurs), Open Graph/Twitter Card ajoutés
+  dans `app/layout.tsx`. Vérifié contre la vraie base (fiche ZOZO, compteurs réels, sitemap/robots 200).

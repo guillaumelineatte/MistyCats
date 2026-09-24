@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 
 interface Article {
   id: string
+  slug: string
   title: string
   priceCents: number
   image: string
@@ -165,6 +166,7 @@ export function CollectionView({ articles, categories, showHeader = true }: Coll
                 key={article.id}
                 product={{
                   id: article.id,
+                  slug: article.slug,
                   name: article.title,
                   priceCents: article.priceCents,
                   image: article.image,

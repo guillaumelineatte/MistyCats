@@ -14,6 +14,7 @@ export const metadata = {
 
 const articleSelect = {
   id: true,
+  slug: true,
   title: true,
   priceCents: true,
   createdAt: true,

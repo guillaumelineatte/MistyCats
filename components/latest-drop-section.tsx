@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 
 interface DropArticle {
   id: string
+  slug: string
   title: string
   priceCents: number
   image: string
@@ -91,6 +92,7 @@ export function LatestDropSection({ drop }: LatestDropSectionProps) {
                 key={article.id}
                 product={{
                   id: article.id,
+                  slug: article.slug,
                   name: article.title,
                   priceCents: article.priceCents,
                   image: article.image,
