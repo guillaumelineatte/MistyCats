@@ -212,3 +212,17 @@ est `mistycates` (id `square-fire-43209862`).
   connexions simultanées vers la vraie base Neon (non poolée, pas de branche de test dédiée dans ce projet)
   saturent le pool et font échouer des requêtes sans rapport avec le code testé (découvert en écrivant cette
   phase : la suite passait isolée mais échouait en parallèle avec la phase 7-8, pas un bug applicatif).
+- **D11 (25/09/2026, phase 10)** — Clôture de la mission. `next.config.mjs` : `typescript.ignoreBuildErrors`
+  retiré (était à `true` depuis l'origine du projet, contredisait directement la règle d'ingénierie « TypeScript
+  strict ») — `npm run build` exécute maintenant une vraie validation TypeScript (vérifié : toujours vert, aucune
+  erreur cachée n'existait). En-têtes de sécurité + CSP ajoutés, vérifiés sans violation en conditions réelles
+  (Chromium headless, plusieurs pages) — un premier essai bloquait le script de `@vercel/analytics`
+  (`va.vercel-scripts.com`), corrigé en l'autorisant explicitement. Boutons héros « Découvrir la Collection » /
+  « Notre Histoire » corrigés (relevés en phase 0, jamais traités jusqu'ici — aucun `href`/`onClick`). Suite de
+  tests complétée : `lib/rate-limit.test.ts`, `lib/payment/mock-payment.test.ts` (signature webhook valide/invalide,
+  création d'intention de paiement) — 10 tests unitaires au total, tous verts contre la vraie base. `AUDIT.md`
+  entièrement réécrit (inventaire exhaustif, écran par écran, statut réel de chaque élément interactif) et
+  `README.md` complété (installation, commandes, déploiement). Périmètre volontairement non traité, documenté
+  dans `AUDIT.md` section 4 : identité légale de la cliente, relecture juridique, vrai numéro de téléphone du
+  magasin (incohérence affichage/lien jamais résolue faute de confirmation), vraies photos, passage à Stripe,
+  configuration SMTP réelle.

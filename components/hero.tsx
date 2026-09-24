@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowDown } from "lucide-react"
 
@@ -54,17 +55,19 @@ export function Hero() {
           className={`mt-8 sm:mt-12 flex flex-col gap-3 sm:gap-4 justify-center transition-all duration-1000 delay-500 ${loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
         >
           <Button
+            asChild
             size="lg"
             className="bg-background text-foreground hover:bg-background/90 px-6 sm:px-10 py-5 sm:py-6 text-xs sm:text-sm tracking-widest uppercase rounded-none"
           >
-            Découvrir la Collection
+            <Link href="/boutique">Découvrir la Collection</Link>
           </Button>
           <Button
+            asChild
             variant="outline"
             size="lg"
             className="border-background text-background hover:bg-background/10 px-6 sm:px-10 py-5 sm:py-6 text-xs sm:text-sm tracking-widest uppercase rounded-none bg-transparent"
           >
-            Notre Histoire
+            <Link href="#notre-histoire">Notre Histoire</Link>
           </Button>
         </div>
       </div>
