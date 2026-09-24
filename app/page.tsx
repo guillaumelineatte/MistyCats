@@ -5,26 +5,34 @@ import { Philosophy } from "@/components/philosophy"
 import { FeaturedCollection } from "@/components/featured-collection"
 import { Categories } from "@/components/categories"
 import { Store } from "@/components/store"
-import { Testimonials } from "@/components/testimonials"
+import { Provenance } from "@/components/provenance"
 import { Newsletter } from "@/components/newsletter"
 import { Footer } from "@/components/footer"
 
 export const dynamic = "force-dynamic"
 
 export default async function Home() {
-  const articles = await prisma.article.findMany({
-    where: { published: true },
+  const rows = await prisma.article.findMany({
+    where: { status: "ONLINE" },
     orderBy: { order: "asc" },
     take: 4,
     select: {
       id: true,
       title: true,
-      price: true,
-      image: true,
-      category: true,
+      priceCents: true,
       createdAt: true,
+      category: { select: { name: true } },
+      images: { orderBy: { position: "asc" }, take: 1 },
     },
   })
+  const articles = rows.map((a) => ({
+    id: a.id,
+    title: a.title,
+    priceCents: a.priceCents,
+    createdAt: a.createdAt,
+    categoryName: a.category.name,
+    image: a.images[0]?.url ?? "",
+  }))
 
   return (
     <main className="min-h-screen bg-background">
@@ -34,7 +42,7 @@ export default async function Home() {
       <section id="collection"><FeaturedCollection articles={articles} /></section>
       <section id="categories"><Categories /></section>
       <Store />
-      <section id="avis"><Testimonials /></section>
+      <section id="provenance"><Provenance /></section>
       <section id="newsletter"><Newsletter /></section>
       <Footer />
     </main>

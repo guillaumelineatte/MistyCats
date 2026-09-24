@@ -4,31 +4,38 @@ import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { ProductCard } from "@/components/product-card"
-import { CATEGORIES } from "@/lib/validations/article"
 import { cn } from "@/lib/utils"
 
 interface Article {
   id: string
   title: string
-  price: number
+  priceCents: number
   image: string
-  category: string
+  categorySlug: string
+  categoryName: string
   createdAt: Date
+}
+
+interface Category {
+  slug: string
+  name: string
 }
 
 interface CollectionViewProps {
   articles: Article[]
+  categories: Category[]
+  showHeader?: boolean
 }
 
 const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000
 
-const ALL_FILTERS = ["Tous", ...CATEGORIES] as const
-
-export function CollectionView({ articles }: CollectionViewProps) {
+export function CollectionView({ articles, categories, showHeader = true }: CollectionViewProps) {
   const searchParams = useSearchParams()
-  const activeCategory = searchParams.get("categorie") ?? "Tous"
+  const activeCategory = searchParams.get("categorie") ?? "tous"
   const [visible, setVisible] = useState(false)
   const [gridKey, setGridKey] = useState(0)
+
+  const allFilters = [{ slug: "tous", name: "Tous" }, ...categories]
 
   useEffect(() => {
     setVisible(true)
@@ -40,31 +47,49 @@ export function CollectionView({ articles }: CollectionViewProps) {
   }, [activeCategory])
 
   const filtered =
-    activeCategory === "Tous"
+    activeCategory === "tous"
       ? articles
-      : articles.filter((a) => a.category === activeCategory)
+      : articles.filter((a) => a.categorySlug === activeCategory)
 
   return (
     <>
       {/* En-tête de page */}
-      <section className="pt-40 pb-12 sm:pt-48 sm:pb-16 text-center">
-        <div
-          className={cn(
-            "transition-all duration-700",
-            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
-          )}
-        >
-          <span className="inline-block text-xs sm:text-sm tracking-[0.3em] uppercase text-muted-foreground mb-4">
-            Misty Cats
-          </span>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-light tracking-widest uppercase mb-4">
-            La <span className="italic font-normal">Collection</span>
-          </h1>
-          <p className="text-muted-foreground text-sm tracking-wider max-w-md mx-auto px-4">
-            Bijoux artisanaux upcyclés, créés à Amiens avec soin.
-          </p>
-        </div>
-      </section>
+      {showHeader ? (
+        <section className="pt-40 pb-12 sm:pt-48 sm:pb-16 text-center">
+          <div
+            className={cn(
+              "transition-all duration-700",
+              visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
+            )}
+          >
+            <span className="inline-block text-xs sm:text-sm tracking-[0.3em] uppercase text-muted-foreground mb-4">
+              Misty Cats
+            </span>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-light tracking-widest uppercase mb-4">
+              La <span className="italic font-normal">Collection</span>
+            </h1>
+            <p className="text-muted-foreground text-sm tracking-wider max-w-md mx-auto px-4">
+              Bijoux artisanaux upcyclés, créés à Amiens avec soin.
+            </p>
+          </div>
+        </section>
+      ) : (
+        <section className="pt-40 pb-4 sm:pt-48 sm:pb-6 text-center">
+          <div
+            className={cn(
+              "transition-all duration-700",
+              visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
+            )}
+          >
+            <span className="inline-block text-xs sm:text-sm tracking-[0.3em] uppercase text-muted-foreground mb-3">
+              Misty Cats
+            </span>
+            <h1 className="text-3xl sm:text-4xl font-light tracking-widest uppercase">
+              La <span className="italic font-normal">Collection</span>
+            </h1>
+          </div>
+        </section>
+      )}
 
       {/* Filtres */}
       <div
@@ -75,16 +100,16 @@ export function CollectionView({ articles }: CollectionViewProps) {
       >
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex items-center gap-0 overflow-x-auto scrollbar-none">
-            {ALL_FILTERS.map((cat) => {
-              const isActive = activeCategory === cat
+            {allFilters.map((cat) => {
+              const isActive = activeCategory === cat.slug
               const href =
-                cat === "Tous"
+                cat.slug === "tous"
                   ? "/boutique"
-                  : `/boutique?categorie=${encodeURIComponent(cat)}`
+                  : `/boutique?categorie=${encodeURIComponent(cat.slug)}`
 
               return (
                 <Link
-                  key={cat}
+                  key={cat.slug}
                   href={href}
                   scroll={false}
                   className={cn(
@@ -94,7 +119,7 @@ export function CollectionView({ articles }: CollectionViewProps) {
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  {cat}
+                  {cat.name}
                   {/* Indicateur actif */}
                   <span
                     className={cn(
@@ -141,9 +166,9 @@ export function CollectionView({ articles }: CollectionViewProps) {
                 product={{
                   id: article.id,
                   name: article.title,
-                  price: article.price,
+                  priceCents: article.priceCents,
                   image: article.image,
-                  category: article.category,
+                  category: article.categoryName,
                   isNew: Date.now() - new Date(article.createdAt).getTime() < THIRTY_DAYS,
                 }}
               />

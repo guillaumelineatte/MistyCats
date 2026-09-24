@@ -31,10 +31,10 @@ export function DeleteDialog({ articleId, articleTitle }: DeleteDialogProps) {
     try {
       const res = await fetch(`/api/articles/${articleId}`, { method: "DELETE" })
       if (!res.ok) throw new Error()
-      toast.success("Article supprimé")
+      toast.success("Pièce archivée")
       router.refresh()
     } catch {
-      toast.error("Impossible de supprimer l'article")
+      toast.error("Impossible d'archiver la pièce")
     } finally {
       setLoading(false)
     }
@@ -49,11 +49,11 @@ export function DeleteDialog({ articleId, articleTitle }: DeleteDialogProps) {
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="font-serif text-xl">Supprimer l'article</AlertDialogTitle>
+          <AlertDialogTitle className="font-serif text-xl">Archiver la pièce</AlertDialogTitle>
           <AlertDialogDescription>
-            Voulez-vous vraiment supprimer{" "}
+            Voulez-vous vraiment archiver{" "}
             <span className="font-medium text-foreground">«&nbsp;{articleTitle}&nbsp;»</span> ?
-            Cette action est irréversible.
+            Elle disparaîtra du site public mais restera visible ici et dans l'historique des commandes.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -65,7 +65,7 @@ export function DeleteDialog({ articleId, articleTitle }: DeleteDialogProps) {
             disabled={loading}
             className="rounded-none tracking-wider uppercase text-xs bg-destructive text-white hover:bg-destructive/90"
           >
-            {loading ? "Suppression…" : "Supprimer"}
+            {loading ? "Archivage…" : "Archiver"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

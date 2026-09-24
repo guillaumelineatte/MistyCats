@@ -7,9 +7,22 @@ import { ArticlesTable } from "@/components/admin/articles-table"
 export const dynamic = "force-dynamic"
 
 export default async function AdminArticlesPage() {
-  const articles = await prisma.article.findMany({
+  const rows = await prisma.article.findMany({
     orderBy: { order: "asc" },
+    include: {
+      category: { select: { name: true } },
+      images: { orderBy: { position: "asc" }, take: 1 },
+    },
   })
+
+  const articles = rows.map((a) => ({
+    id: a.id,
+    title: a.title,
+    categoryName: a.category.name,
+    priceCents: a.priceCents,
+    status: a.status,
+    image: a.images[0]?.url ?? null,
+  }))
 
   return (
     <div>

@@ -32,16 +32,17 @@ import {
 import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/admin/status-badge"
 import { DeleteDialog } from "@/components/admin/delete-dialog"
+import { formatCents } from "@/lib/money"
 import { cn } from "@/lib/utils"
+import type { ARTICLE_STATUSES } from "@/lib/validations/article"
 
 interface Article {
   id: string
   title: string
-  category: string
-  price: number
-  stock: number
-  published: boolean
-  image: string
+  categoryName: string
+  priceCents: number
+  status: (typeof ARTICLE_STATUSES)[number]
+  image: string | null
 }
 
 type SaveStatus = "idle" | "saving" | "saved"
@@ -106,10 +107,9 @@ function SortableRow({
       </TableCell>
 
       <TableCell className="font-medium">{article.title}</TableCell>
-      <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">{article.category}</TableCell>
-      <TableCell className="text-sm">{article.price.toFixed(2)} €</TableCell>
-      <TableCell className="hidden md:table-cell text-sm">{article.stock}</TableCell>
-      <TableCell><StatusBadge published={article.published} /></TableCell>
+      <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">{article.categoryName}</TableCell>
+      <TableCell className="text-sm">{formatCents(article.priceCents)}</TableCell>
+      <TableCell><StatusBadge status={article.status} /></TableCell>
 
       {/* Actions */}
       <TableCell className="text-right">
@@ -246,7 +246,6 @@ export function ArticlesTable({ articles: initialArticles }: { articles: Article
                 <TableHead className="text-xs tracking-wider uppercase">Titre</TableHead>
                 <TableHead className="hidden sm:table-cell text-xs tracking-wider uppercase">Catégorie</TableHead>
                 <TableHead className="text-xs tracking-wider uppercase">Prix</TableHead>
-                <TableHead className="hidden md:table-cell text-xs tracking-wider uppercase">Stock</TableHead>
                 <TableHead className="text-xs tracking-wider uppercase">Statut</TableHead>
                 <TableHead className="text-right text-xs tracking-wider uppercase">Actions</TableHead>
               </TableRow>

@@ -8,9 +8,9 @@ import { ProductCard } from "@/components/product-card"
 interface Article {
   id: string
   title: string
-  price: number
+  priceCents: number
   image: string
-  category: string
+  categoryName: string
   createdAt: Date
 }
 
@@ -73,9 +73,9 @@ export function FeaturedCollection({ articles }: FeaturedCollectionProps) {
                 product={{
                   id: article.id,
                   name: article.title,
-                  price: article.price,
+                  priceCents: article.priceCents,
                   image: article.image,
-                  category: article.category,
+                  category: article.categoryName,
                   isNew: Date.now() - new Date(article.createdAt).getTime() < THIRTY_DAYS,
                 }}
               />

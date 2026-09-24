@@ -1,0 +1,31 @@
+import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
+
+interface Params {
+  params: Promise<{ id: string }>
+}
+
+// PATCH /api/drops/:id/publish — publication immédiate (admin)
+export async function PATCH(req: NextRequest, { params }: Params) {
+  const session = await auth()
+  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
+
+  const { id } = await params
+
+  const drop = await prisma.drop.findUnique({ where: { id } })
+  if (!drop) return NextResponse.json({ error: "Introuvable" }, { status: 404 })
+
+  await prisma.$transaction([
+    prisma.drop.update({
+      where: { id },
+      data: { published: true, scheduledAt: null },
+    }),
+    prisma.article.updateMany({
+      where: { dropId: id, status: "DRAFT" },
+      data: { status: "ONLINE", publishedAt: new Date() },
+    }),
+  ])
+
+  return NextResponse.json({ success: true })
+}

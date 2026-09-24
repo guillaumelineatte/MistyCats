@@ -12,18 +12,27 @@ enum Role {
 }
 
 model User {
-  id                 String    @id @default(cuid())
-  email              String    @unique
-  name               String?
-  lastName           String?
-  phone              String?
-  passwordHash       String
-  role               Role      @default(CUSTOMER)
-  resetToken         String?   @unique
-  resetTokenExpiry   DateTime?
-  addresses          Address[]
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @default(now()) @updatedAt
+  id               String    @id @default(cuid())
+  email            String    @unique
+  name             String?
+  lastName         String?
+  phone            String?
+  passwordHash     String
+  role             Role      @default(CUSTOMER)
+  emailVerified    DateTime?
+  tokenVersion     Int       @default(0)
+  resetToken       String?   @unique
+  resetTokenExpiry DateTime?
+  addresses        Address[]
+
+  cart               Cart?
+  orders             Order[]
+  contactMessages    ContactMessage[]
+  customRequests     CustomRequest[]
+  verificationTokens VerificationToken[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 enum AddressType {
@@ -50,16 +59,275 @@ model Address {
   @@unique([userId, type])
 }
 
+model Drop {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  coverImage  String?
+  published   Boolean   @default(false)
+  scheduledAt DateTime?
+  articles    Article[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model NewsletterSubscriber {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  unsubscribeToken String    @unique @default(cuid())
+  subscribedAt     DateTime  @default(now())
+  unsubscribedAt   DateTime?
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  description String?
+  order       Int       @default(0)
+  articles    Article[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum ArticleStatus {
+  DRAFT
+  ONLINE
+  RESERVED
+  SOLD
+  ARCHIVED
+}
+
+// Chaque ligne représente une pièce physique unique, jamais un stock.
 model Article {
+  id               String        @id @default(cuid())
+  slug             String        @unique
+  sku              String        @unique
+  title            String
+  shortDescription String
+  description      String
+  story            String?
+  priceCents       Int
+  categoryId       String
+  category         Category      @relation(fields: [categoryId], references: [id])
+  era              String?
+  materials        String?
+  dimensions       String?
+  chainLength      String?
+  weight           String?
+  status           ArticleStatus @default(DRAFT)
+  reservedUntil    DateTime?
+  order            Int           @default(0)
+  publishedAt      DateTime?
+  dropId           String?
+  drop             Drop?         @relation(fields: [dropId], references: [id], onDelete: SetNull)
+
+  images     ArticleImage[]
+  cartItem   CartItem?
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([categoryId])
+}
+
+model ArticleImage {
+  id        String   @id @default(cuid())
+  articleId String
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String   @default("")
+  position  Int      @default(0)
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([articleId])
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String?    @unique
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  anonToken String?    @unique
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+// articleId est @unique : une pièce ne peut être réservée que dans un seul panier à la fois.
+model CartItem {
+  id            String   @id @default(cuid())
+  cartId        String
+  cart          Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  articleId     String   @unique
+  article       Article  @relation(fields: [articleId], references: [id])
+  reservedUntil DateTime
+  createdAt     DateTime @default(now())
+
+  @@index([cartId])
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PREPARING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  number          String      @unique
+  userId          String?
+  user            User?       @relation(fields: [userId], references: [id])
+  email           String
+  shippingAddress Json
+  billingAddress  Json
+  shippingMethod  String
+  subtotalCents   Int
+  shippingCents   Int
+  totalCents      Int
+  status          OrderStatus @default(PENDING_PAYMENT)
+
+  items    OrderItem[]
+  payment  Payment?
+  shipment Shipment?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([email])
+}
+
+// Instantané complet de la pièce au moment de l'achat : la fiche peut évoluer
+// (ou la pièce être archivée) sans jamais altérer l'historique de commande.
+model OrderItem {
+  id                 String   @id @default(cuid())
+  orderId            String
+  order              Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  articleId          String?
+  article            Article? @relation(fields: [articleId], references: [id], onDelete: Restrict)
+  titleSnapshot      String
+  skuSnapshot        String
+  priceCentsSnapshot Int
+  imageSnapshot      String?
+  createdAt          DateTime @default(now())
+
+  @@index([orderId])
+}
+
+enum ShipmentStatus {
+  PREPARING
+  SHIPPED
+  IN_TRANSIT
+  DELIVERED
+  EXCEPTION
+}
+
+model Shipment {
+  id                  String          @id @default(cuid())
+  orderId             String          @unique
+  order               Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  carrier             String?
+  trackingNumber      String?
+  shippedAt           DateTime?
+  estimatedDeliveryAt DateTime?
+  deliveredAt         DateTime?
+  events              ShipmentEvent[]
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+}
+
+model ShipmentEvent {
+  id         String         @id @default(cuid())
+  shipmentId String
+  shipment   Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  status     ShipmentStatus
+  label      String
+  location   String?
+  occurredAt DateTime       @default(now())
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  orderId        String        @unique
+  order          Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider       String        @default("mock")
+  status         PaymentStatus @default(PENDING)
+  amountCents    Int
+  currency       String        @default("EUR")
+  transactionRef String        @unique
+  rawPayload     Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  processed Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model CustomRequest {
   id          String   @id @default(cuid())
-  title       String
+  name        String
+  email       String
   description String
-  price       Float
-  image       String   @default("")
-  category    String
-  stock       Int      @default(0)
-  published   Boolean  @default(false)
-  order       Int      @default(0)
+  budget      String?
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  processed   Boolean  @default(false)
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+}
+
+enum VerificationTokenType {
+  EMAIL_VERIFY
+  PASSWORD_RESET
+}
+
+model VerificationToken {
+  id        String                @id @default(cuid())
+  userId    String
+  user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String                @unique
+  type      VerificationTokenType
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime              @default(now())
+
+  @@index([userId, type])
+}
+
+model RateLimitHit {
+  id          String   @id @default(cuid())
+  key         String
+  windowStart DateTime
+  count       Int      @default(1)
+
+  @@unique([key, windowStart])
+}
+
+// Compteurs atomiques (ex. numéro de commande par année) — incrémentés via
+// une transaction, jamais lus puis réécrits séparément.
+model Counter {
+  key   String @id
+  value Int    @default(0)
 }

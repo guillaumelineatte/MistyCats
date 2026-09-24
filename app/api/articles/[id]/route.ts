@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { articleSchema } from "@/lib/validations/article"
+import { eurosToCents } from "@/lib/money"
 
 // GET /api/articles/:id
 export async function GET(
@@ -9,7 +10,10 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const article = await prisma.article.findUnique({ where: { id } })
+  const article = await prisma.article.findUnique({
+    where: { id },
+    include: { category: true, images: { orderBy: { position: "asc" } } },
+  })
 
   if (!article) {
     return NextResponse.json({ error: "Article introuvable" }, { status: 404 })
@@ -44,15 +48,29 @@ export async function PUT(
     return NextResponse.json({ error: "Article introuvable" }, { status: 404 })
   }
 
+  const { price, images, categoryId, status, ...rest } = parsed.data
+
   const article = await prisma.article.update({
     where: { id },
-    data: parsed.data,
+    data: {
+      ...rest,
+      priceCents: eurosToCents(price),
+      category: { connect: { id: categoryId } },
+      status,
+      publishedAt: status === "ONLINE" && !existing.publishedAt ? new Date() : existing.publishedAt,
+      images: {
+        deleteMany: {},
+        create: images.map((img, i) => ({ ...img, position: i })),
+      },
+    },
   })
 
   return NextResponse.json(article)
 }
 
-// DELETE /api/articles/:id — suppression (admin uniquement)
+// DELETE /api/articles/:id — archivage (admin uniquement). La suppression
+// définitive n'est jamais exposée : une pièce déjà vendue doit garder son
+// historique de commande intact.
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -69,6 +87,6 @@ export async function DELETE(
     return NextResponse.json({ error: "Article introuvable" }, { status: 404 })
   }
 
-  await prisma.article.delete({ where: { id } })
+  await prisma.article.update({ where: { id }, data: { status: "ARCHIVED" } })
   return NextResponse.json({ success: true })
 }

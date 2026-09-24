@@ -4,11 +4,12 @@ import { useState } from "react"
 import { Heart, ShoppingBag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { formatCents } from "@/lib/money"
 
 interface Product {
   id: string | number
   name: string
-  price: number
+  priceCents: number
   image: string
   category: string
   isNew?: boolean
@@ -77,7 +78,7 @@ export function ProductCard({ product }: ProductCardProps) {
       <div className="space-y-1">
         <p className="text-xs tracking-wider text-muted-foreground uppercase">{product.category}</p>
         <h3 className="text-lg font-medium group-hover:text-primary transition-colors">{product.name}</h3>
-        <p className="text-base font-light">{product.price.toFixed(2)} €</p>
+        <p className="text-base font-light">{formatCents(product.priceCents)}</p>
       </div>
     </div>
   )

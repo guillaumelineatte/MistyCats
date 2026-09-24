@@ -10,7 +10,13 @@ interface EditArticlePageProps {
 
 export default async function EditArticlePage({ params }: EditArticlePageProps) {
   const { id } = await params
-  const article = await prisma.article.findUnique({ where: { id } })
+  const [article, categories] = await Promise.all([
+    prisma.article.findUnique({
+      where: { id },
+      include: { images: { orderBy: { position: "asc" } } },
+    }),
+    prisma.category.findMany({ orderBy: { order: "asc" } }),
+  ])
 
   if (!article) notFound()
 
@@ -29,7 +35,7 @@ export default async function EditArticlePage({ params }: EditArticlePageProps) 
         Modifier l'article
       </h1>
 
-      <ArticleForm article={article} />
+      <ArticleForm article={article} categories={categories} />
     </div>
   )
 }
