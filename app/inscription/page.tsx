@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { signIn } from "next-auth/react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -22,11 +22,12 @@ import { registerSchema, type RegisterInput } from "@/lib/validations/auth"
 
 function InscriptionForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [error, setError] = useState<string | null>(null)
 
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
+    defaultValues: { name: "", email: searchParams.get("email") ?? "", password: "", confirmPassword: "" },
   })
 
   async function onSubmit(data: RegisterInput) {
@@ -171,7 +172,9 @@ function InscriptionForm() {
 export default function InscriptionPage() {
   return (
     <SessionProvider>
-      <InscriptionForm />
+      <Suspense fallback={null}>
+        <InscriptionForm />
+      </Suspense>
     </SessionProvider>
   )
 }

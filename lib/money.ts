@@ -19,3 +19,9 @@ export function eurosToCents(euros: number): number {
 export function centsToEuros(cents: number): number {
   return cents / 100
 }
+
+/** Parse un affichage fr-FR type "4,90 €" (lib/site-config.ts) en centimes entiers. */
+export function parseEuroDisplayToCents(display: string): number {
+  const normalized = display.replace(/[^\d,.-]/g, "").replace(",", ".")
+  return eurosToCents(parseFloat(normalized))
+}

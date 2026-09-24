@@ -2,6 +2,7 @@ import nodemailer from "nodemailer"
 import { mkdir, writeFile } from "fs/promises"
 import path from "path"
 import os from "os"
+import { formatCents } from "@/lib/money"
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -156,6 +157,65 @@ export async function sendNewsletterConfirmationEmail(to: string, unsubscribeTok
       bodyHtml: `Merci de votre inscription. Vous recevrez nos nouvelles collections, nos histoires de
         création et des offres exclusives.`,
       footerHtml: `Vous pouvez vous désinscrire à tout moment en <a href="${unsubscribeUrl}" style="color: #9a9a8a;">cliquant ici</a>.`,
+    })
+  )
+}
+
+export async function sendOrderConfirmationEmail(
+  to: string,
+  order: { number: string; items: { titleSnapshot: string; priceCentsSnapshot: number }[]; totalCents: number }
+) {
+  const trackingUrl = `${baseUrl()}/suivi?commande=${order.number}`
+  const itemsHtml = order.items
+    .map(
+      (item) =>
+        `<tr><td style="padding: 6px 0; font-size: 13px;">${item.titleSnapshot}</td><td style="padding: 6px 0; font-size: 13px; text-align: right;">${formatCents(item.priceCentsSnapshot)}</td></tr>`
+    )
+    .join("")
+
+  await deliver(
+    to,
+    `Confirmation de votre commande ${order.number} — Misty Cats`,
+    renderLayout({
+      heading: `Commande ${order.number} confirmée`,
+      bodyHtml: `Merci pour votre commande. Voici un récapitulatif :
+        <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+          ${itemsHtml}
+          <tr><td style="padding-top: 12px; font-weight: bold; font-size: 13px;">Total</td>
+              <td style="padding-top: 12px; font-weight: bold; font-size: 13px; text-align: right;">${formatCents(order.totalCents)}</td></tr>
+        </table>`,
+      ctaLabel: "Suivre ma commande",
+      ctaUrl: trackingUrl,
+    })
+  )
+}
+
+export async function sendOrderShippedEmail(
+  to: string,
+  order: { number: string; carrier: string; trackingNumber: string }
+) {
+  const trackingUrl = `${baseUrl()}/suivi?commande=${order.number}`
+
+  await deliver(
+    to,
+    `Votre commande ${order.number} est en route — Misty Cats`,
+    renderLayout({
+      heading: "Votre commande a été expédiée",
+      bodyHtml: `Votre commande <strong>${order.number}</strong> vient d'être expédiée via
+        <strong>${order.carrier}</strong>. Numéro de suivi : <strong>${order.trackingNumber}</strong>.`,
+      ctaLabel: "Suivre mon colis",
+      ctaUrl: trackingUrl,
+    })
+  )
+}
+
+export async function sendOrderDeliveredEmail(to: string, order: { number: string }) {
+  await deliver(
+    to,
+    `Votre commande ${order.number} a été livrée — Misty Cats`,
+    renderLayout({
+      heading: "Votre commande a été livrée",
+      bodyHtml: `Votre commande <strong>${order.number}</strong> a été livrée. Nous espérons qu'elle vous plaira !`,
     })
   )
 }

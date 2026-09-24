@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { X, Loader2 } from "lucide-react"
-import { toast } from "sonner"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
@@ -125,11 +124,8 @@ export default function PanierPage() {
                 <span className="text-xl font-light">{formatCents(total)}</span>
               </div>
 
-              <Button
-                className="w-full rounded-none tracking-widest uppercase text-xs py-6"
-                onClick={() => toast.info("Le tunnel de commande arrive très bientôt.")}
-              >
-                Passer commande
+              <Button asChild className="w-full rounded-none tracking-widest uppercase text-xs py-6">
+                <Link href="/commande">Passer commande</Link>
               </Button>
             </>
           )}

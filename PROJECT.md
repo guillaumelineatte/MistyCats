@@ -139,3 +139,31 @@ est `mistycates` (id `square-fire-43209862`).
   Icône panier du header affiche maintenant un vrai compteur (`lib/cart-events.ts`, bus d'événements léger,
   pas de state manager global). Page `/panier` avec compte à rebours par pièce. Le bouton « Passer commande »
   reste un stub (toast) — tunnel de commande réel en phase 5, juste après.
+- **D7 (24/09/2026, phase 5)** — Tunnel de commande (`/commande`, 3 étapes : coordonnées → livraison →
+  récapitulatif/paiement) + paiement simulé. `lib/payment/types.ts` définit l'interface `PaymentProvider`
+  (`createIntent`, `confirm`, `refund`, `handleWebhook`) ; `lib/payment/mock-payment.ts` l'implémente. La commande
+  n'est **jamais** confirmée par la route qui reçoit la carte : `POST /api/orders` crée la commande en
+  `PENDING_PAYMENT` + un `Payment` `PENDING` (numéro atomique via `lib/order-number.ts`, table `Counter`) ;
+  `POST /api/payments/:ref/confirm` déclenche `MockPaymentProvider.confirm()`, qui fait un aller-retour HTTP signé
+  HMAC (`PAYMENT_WEBHOOK_SECRET`) vers `POST /api/payments/webhook` — seul endroit qui appelle
+  `markArticleSold` et passe la commande à `PAID` (`lib/payment/apply-outcome.ts`, idempotent : un webhook
+  rejoué sur un paiement déjà traité est un no-op, vérifié en conditions réelles). 4 cartes de test
+  (acceptée/refusée/fonds insuffisants/délai 5s) implémentées exactement comme spécifié. Un paiement refusé
+  laisse la pièce `RESERVED` (la cliente peut réessayer) ; le webhook applique lui-même un filet de sécurité
+  (transaction + `markArticleSold` re-vérifié) si une pièce devenait indisponible entre la commande et le
+  paiement. Commande invité autorisée (`Order.userId` nullable) ; email vérifié obligatoire uniquement pour
+  les comptes connectés, pas de barrière pour les invités. Vérifié en conditions réelles contre la vraie base
+  (Neon) et un vrai serveur dev : réservation → commande → paiement accepté → `PAID`/`SOLD`/email envoyé,
+  paiement refusé → `PENDING_PAYMENT`/`RESERVED` conservés, re-confirmation rejetée (409), rejeu du webhook
+  sans double traitement, signature invalide rejetée. Toutes les données de test nettoyées après coup.
+  **Points à modifier pour brancher Stripe plus tard** (aucun autre fichier ne doit changer) :
+  1. Nouvelle classe `StripePaymentProvider implements PaymentProvider` dans `lib/payment/stripe-payment.ts` —
+     `createIntent` appelle `stripe.paymentIntents.create`, `confirm` n'est plus nécessaire côté serveur (Stripe.js
+     gère la confirmation client-side), `handleWebhook` vérifie la signature via `stripe.webhooks.constructEvent`.
+  2. `app/api/payments/webhook/route.ts` : passer de `x-mock-signature` à l'en-tête `stripe-signature`, et
+     `export const paymentProvider = new StripePaymentProvider()` au lieu de `MockPaymentProvider`.
+  3. L'écran de paiement (`app/commande/page.tsx`, étape 3) : remplacer le champ carte factice par
+     `@stripe/react-stripe-js` (`PaymentElement`) et appeler `stripe.confirmPayment()` côté client au lieu de
+     `POST /api/payments/:ref/confirm`.
+  4. `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` en variables d'environnement, `PAYMENT_WEBHOOK_SECRET` retiré.
+  5. `lib/payment/apply-outcome.ts` ne change pas — c'est tout l'intérêt de l'interface.
