@@ -87,6 +87,10 @@ export async function DELETE(
     return NextResponse.json({ error: "Article introuvable" }, { status: 404 })
   }
 
-  await prisma.article.update({ where: { id }, data: { status: "ARCHIVED" } })
+  // Archiver une pièce actuellement réservée libère aussi sa place dans un panier.
+  await prisma.$transaction([
+    prisma.cartItem.deleteMany({ where: { articleId: id } }),
+    prisma.article.update({ where: { id }, data: { status: "ARCHIVED", reservedUntil: null } }),
+  ])
   return NextResponse.json({ success: true })
 }

@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react"
 import { Menu, X, ShoppingBag, Search, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { CART_UPDATED_EVENT } from "@/lib/cart-events"
 
 const navLinks = [
   { href: "#notre-histoire", label: "Notre Histoire" },
@@ -22,6 +23,7 @@ export function Header() {
   const pathname = usePathname()
   const router = useRouter()
   const { data: session } = useSession()
+  const [cartCount, setCartCount] = useState(0)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,6 +31,21 @@ export function Header() {
     }
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  useEffect(() => {
+    async function refreshCartCount() {
+      try {
+        const res = await fetch("/api/cart")
+        const data = await res.json()
+        setCartCount(data.items?.length ?? 0)
+      } catch {
+        // Le compteur reste inchangé si l'appel échoue — pas bloquant.
+      }
+    }
+    refreshCartCount()
+    window.addEventListener(CART_UPDATED_EVENT, refreshCartCount)
+    return () => window.removeEventListener(CART_UPDATED_EVENT, refreshCartCount)
   }, [])
 
   const handleNavClick = () => {
@@ -128,11 +145,15 @@ export function Header() {
                 <User className="h-4 w-4 sm:h-5 sm:w-5" />
               </Link>
             </Button>
-            <Button variant="ghost" size="icon" className="relative hover:bg-secondary h-9 w-9 sm:h-10 sm:w-10">
-              <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center">
-                0
-              </span>
+            <Button variant="ghost" size="icon" className="relative hover:bg-secondary h-9 w-9 sm:h-10 sm:w-10" asChild>
+              <Link href="/panier" aria-label="Panier">
+                <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
             </Button>
 
             {/* Mobile Menu Toggle */}

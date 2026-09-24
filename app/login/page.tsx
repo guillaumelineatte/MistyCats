@@ -45,6 +45,8 @@ function LoginForm() {
       return
     }
 
+    await fetch("/api/cart/merge", { method: "POST" }).catch(() => {})
+
     const res = await fetch("/api/auth/session")
     const session = await res.json()
 

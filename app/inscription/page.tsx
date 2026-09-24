@@ -56,6 +56,7 @@ function InscriptionForm() {
       // Le compte a été créé, rediriger vers connexion
       router.push("/login")
     } else {
+      await fetch("/api/cart/merge", { method: "POST" }).catch(() => {})
       router.push("/mon-compte")
     }
   }

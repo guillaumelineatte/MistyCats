@@ -122,3 +122,20 @@ est `mistycates` (id `square-fire-43209862`).
   `/mon-compte/commandes` (« Bientôt », choix assumé plutôt qu'un bouton mort). `app/sitemap.ts`/`app/robots.ts`
   ajoutés (absents jusqu'ici), balise `keywords` retirée (ignorée par les moteurs), Open Graph/Twitter Card ajoutés
   dans `app/layout.tsx`. Vérifié contre la vraie base (fiche ZOZO, compteurs réels, sitemap/robots 200).
+- **D6 (24/09/2026, phase 4)** — Panier + réservation pièce unique (`lib/inventory.ts`). Verrou
+  `SELECT ... FOR UPDATE` sur la ligne `Article` dans une transaction Prisma interactive, à la fois à la réservation
+  (`reserveArticleForCart`) et à la vente (`markArticleSold`, utilisé par le webhook de paiement en phase 5) :
+  deux tentatives concurrentes sur la même pièce ne peuvent jamais toutes les deux réussir. `CartItem.articleId`
+  est `@unique` — deuxième filet de sécurité au niveau contrainte DB, une pièce ne peut être dans deux paniers à
+  la fois. Réservation expirée récupérable immédiatement (lazy expiry) sans attendre le cron ; re-ajout par le
+  panier qui détient déjà la pièce = prolongation, pas une nouvelle réservation. Panier anonyme via cookie
+  httpOnly (`lib/cart-session.ts`), fusionné dans le panier utilisateur à la connexion
+  (`POST /api/cart/merge`, appelé juste après `signIn()`). Cron Vercel toutes les 5 min
+  (`vercel.json` → `/api/cron/release-reservations`, protégé par `CRON_SECRET`) qui libère les réservations
+  expirées. `lib/inventory.test.ts` : deux tests de concurrence réels (réservation, vente) qui lancent deux
+  transactions en parallèle sur la même pièce via `Promise.all` contre la vraie base Neon — un seul gagne à
+  chaque fois, vérifié en conditions réelles (pas mocké), données de test nettoyées dans `afterAll`. Bouton
+  « Ajouter au panier » de la fiche produit branché pour de vrai (état désactivé de la phase 3 remplacé).
+  Icône panier du header affiche maintenant un vrai compteur (`lib/cart-events.ts`, bus d'événements léger,
+  pas de state manager global). Page `/panier` avec compte à rebours par pièce. Le bouton « Passer commande »
+  reste un stub (toast) — tunnel de commande réel en phase 5, juste après.

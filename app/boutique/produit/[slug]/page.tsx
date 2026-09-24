@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { ProductGallery } from "@/components/product-gallery"
+import { AddToCartButton } from "@/components/add-to-cart-button"
 import { Button } from "@/components/ui/button"
 import { formatCents } from "@/lib/money"
 import { siteConfig } from "@/lib/site-config"
@@ -154,14 +155,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 </dl>
               )}
 
-              {/* Panier : branché en phase 4 (réservation de la pièce unique). */}
-              <Button
-                disabled
-                className="w-full rounded-none tracking-widest uppercase text-xs py-6"
-                title="Panier disponible prochainement"
-              >
-                {article.status === "ONLINE" ? "Panier bientôt disponible" : "Indisponible"}
-              </Button>
+              {article.status === "ONLINE" ? (
+                <AddToCartButton articleId={article.id} />
+              ) : (
+                <Button disabled className="w-full rounded-none tracking-widest uppercase text-xs py-6">
+                  Indisponible
+                </Button>
+              )}
             </div>
           </div>
         </div>
