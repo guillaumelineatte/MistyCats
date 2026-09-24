@@ -1,31 +1,26 @@
 "use client"
 
+// Composant prêt à recevoir de vrais avis clients quand ils existeront.
+// Non utilisé sur le site tant qu'aucun avis réel n'est disponible — voir
+// AUDIT.md lot 1.2 : les 3 témoignages précédemment affichés étaient inventés
+// et ont été retirés (pratique commerciale trompeuse).
+
 import { useEffect, useRef, useState } from "react"
 import { ChevronLeft, ChevronRight, Quote } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-const testimonials = [
-  {
-    id: 1,
-    text: "Des bijoux d'une beauté rare, avec une histoire unique. Je suis fière de porter des pièces qui ont du sens.",
-    author: "Marie L.",
-    location: "Paris",
-  },
-  {
-    id: 2,
-    text: "La qualité est exceptionnelle et savoir que chaque pièce contribue à un monde plus durable me touche profondément.",
-    author: "Sophie D.",
-    location: "Lyon",
-  },
-  {
-    id: 3,
-    text: "J'ai offert un collier à ma mère, elle était émue par l'histoire derrière. Un cadeau vraiment spécial.",
-    author: "Claire M.",
-    location: "Bordeaux",
-  },
-]
+export interface Testimonial {
+  id: string
+  text: string
+  author: string
+  location?: string
+}
 
-export function Testimonials() {
+interface TestimonialsProps {
+  testimonials: Testimonial[]
+}
+
+export function Testimonials({ testimonials }: TestimonialsProps) {
   const [current, setCurrent] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
   const sectionRef = useRef<HTMLElement>(null)
@@ -46,6 +41,8 @@ export function Testimonials() {
 
     return () => observer.disconnect()
   }, [])
+
+  if (testimonials.length === 0) return null
 
   const next = () => setCurrent((prev) => (prev + 1) % testimonials.length)
   const prev = () => setCurrent((prev) => (prev - 1 + testimonials.length) % testimonials.length)
@@ -79,44 +76,48 @@ export function Testimonials() {
                   className={`mt-6 sm:mt-8 transition-all duration-700 delay-300 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
                 >
                   <p className="font-medium text-base sm:text-lg">{testimonial.author}</p>
-                  <p className="text-muted-foreground text-sm sm:text-base">{testimonial.location}</p>
+                  {testimonial.location && (
+                    <p className="text-muted-foreground text-sm sm:text-base">{testimonial.location}</p>
+                  )}
                 </div>
               </div>
             ))}
           </div>
 
-          <div
-            className={`flex items-center justify-center gap-3 sm:gap-4 mt-8 sm:mt-12 transition-all duration-700 delay-400 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
-          >
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={prev}
-              className="rounded-full border-foreground/20 hover:bg-secondary bg-transparent h-9 w-9 sm:h-10 sm:w-10"
+          {testimonials.length > 1 && (
+            <div
+              className={`flex items-center justify-center gap-3 sm:gap-4 mt-8 sm:mt-12 transition-all duration-700 delay-400 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
             >
-              <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
-            <div className="flex gap-2">
-              {testimonials.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrent(index)}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    index === current ? "w-8 bg-primary" : "w-2 bg-foreground/20"
-                  }`}
-                  aria-label={`Témoignage ${index + 1}`}
-                />
-              ))}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={prev}
+                className="rounded-full border-foreground/20 hover:bg-secondary bg-transparent h-9 w-9 sm:h-10 sm:w-10"
+              >
+                <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
+              <div className="flex gap-2">
+                {testimonials.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrent(index)}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      index === current ? "w-8 bg-primary" : "w-2 bg-foreground/20"
+                    }`}
+                    aria-label={`Témoignage ${index + 1}`}
+                  />
+                ))}
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={next}
+                className="rounded-full border-foreground/20 hover:bg-secondary bg-transparent h-9 w-9 sm:h-10 sm:w-10"
+              >
+                <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
             </div>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={next}
-              className="rounded-full border-foreground/20 hover:bg-secondary bg-transparent h-9 w-9 sm:h-10 sm:w-10"
-            >
-              <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
-          </div>
+          )}
         </div>
       </div>
     </section>

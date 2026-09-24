@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 600" role="img" aria-labelledby="title desc">
+  <title id="title">Photo provisoire</title>
+  <desc id="desc">Emplacement en attente d'une photo réelle du produit Misty Cats.</desc>
+  <rect width="500" height="600" fill="#efe9e1"/>
+  <rect x="16" y="16" width="468" height="568" fill="none" stroke="#c9bfae" stroke-width="1.5" stroke-dasharray="6 6"/>
+  <g fill="#9c8f7a" font-family="Georgia, 'Times New Roman', serif">
+    <circle cx="250" cy="255" r="34" fill="none" stroke="#9c8f7a" stroke-width="2"/>
+    <path d="M232 255 l12 12 l24 -28" fill="none" stroke="#9c8f7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.35"/>
+    <text x="250" y="340" text-anchor="middle" font-size="15" letter-spacing="3" font-style="italic">Misty Cats</text>
+    <text x="250" y="368" text-anchor="middle" font-size="11" letter-spacing="4">PHOTO PROVISOIRE</text>
+  </g>
+</svg>

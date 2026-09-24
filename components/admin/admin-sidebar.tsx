@@ -4,12 +4,13 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
-import { LayoutList, LogOut, ExternalLink, Menu, X } from "lucide-react"
+import { LayoutList, Layers, LogOut, ExternalLink, Menu, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
 const navItems = [
   { href: "/admin/articles", label: "Articles", icon: LayoutList },
+  { href: "/admin/drops", label: "Drops", icon: Layers },
 ]
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {

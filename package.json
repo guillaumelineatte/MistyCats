@@ -3,14 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "prisma generate && next build",
+    "build": "prisma generate && tsx scripts/check-image-domains.ts && next build",
     "dev": "next dev",
     "lint": "eslint .",
     "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "guard:images": "tsx scripts/check-image-domains.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:admin": "tsx scripts/seed-admin.ts",
     "db:studio": "prisma studio"
   },
   "prisma": {
@@ -54,6 +58,7 @@
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "1.1.6",
     "@vercel/analytics": "1.3.1",
+    "@vercel/blob": "^2.8.0",
     "autoprefixer": "^10.4.20",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
@@ -90,11 +95,14 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^17.4.2",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.6",
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
     "tsx": "^4.21.0",
     "tw-animate-css": "1.3.3",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.0.1"
   },
   "allowScripts": {
     "@prisma/engines@7.6.0": true,

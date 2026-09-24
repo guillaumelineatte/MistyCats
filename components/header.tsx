@@ -13,7 +13,7 @@ const navLinks = [
   { href: "/boutique", label: "Boutique" },
   { href: "#categories", label: "Collections" },
   { href: "#magasin", label: "Magasin" },
-  { href: "#avis", label: "Avis" },
+  { href: "#provenance", label: "Nos Matières" },
 ]
 
 export function Header() {

@@ -63,3 +63,49 @@ export async function sendPasswordResetEmail(to: string, token: string) {
     `,
   })
 }
+
+export async function sendNewsletterConfirmationEmail(to: string, unsubscribeToken: string) {
+  const baseUrl = process.env.AUTH_URL ?? "http://localhost:3000"
+  const unsubscribeUrl = `${baseUrl}/api/newsletter/unsubscribe?token=${unsubscribeToken}`
+
+  // En développement sans SMTP configuré : log dans la console
+  if (!process.env.SMTP_HOST) {
+    console.log(`\n[DEV] Inscription newsletter confirmée pour ${to}. Désinscription : ${unsubscribeUrl}\n`)
+    return
+  }
+
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM ?? "noreply@mistycats.fr",
+    to,
+    subject: "Bienvenue dans la newsletter Misty Cats",
+    html: `
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head><meta charset="UTF-8"></head>
+      <body style="font-family: Georgia, serif; background: #faf9f7; margin: 0; padding: 40px 20px;">
+        <div style="max-width: 480px; margin: 0 auto; background: #fff; padding: 48px 40px;">
+          <h1 style="font-size: 22px; letter-spacing: 0.3em; text-transform: uppercase; font-weight: 300; margin: 0 0 8px;">
+            Misty Cats
+          </h1>
+          <p style="font-size: 11px; letter-spacing: 0.4em; text-transform: uppercase; color: #9a9a8a; margin: 0 0 40px;">
+            Bijoux Upcyclés
+          </p>
+
+          <h2 style="font-size: 16px; font-weight: 400; margin: 0 0 16px;">
+            Inscription confirmée
+          </h2>
+          <p style="font-size: 14px; line-height: 1.7; color: #555; margin: 0 0 32px;">
+            Merci de votre inscription. Vous recevrez nos nouvelles collections, nos histoires de création et des
+            offres exclusives.
+          </p>
+
+          <p style="font-size: 12px; color: #9a9a8a; margin: 32px 0 0; line-height: 1.6;">
+            Vous pouvez vous désinscrire à tout moment en
+            <a href="${unsubscribeUrl}" style="color: #9a9a8a;">cliquant ici</a>.
+          </p>
+        </div>
+      </body>
+      </html>
+    `,
+  })
+}
