@@ -95,5 +95,17 @@
     "tsx": "^4.21.0",
     "tw-animate-css": "1.3.3",
     "typescript": "^5"
+  },
+  "allowScripts": {
+    "@prisma/engines@7.6.0": true,
+    "esbuild@0.27.7": true,
+    "fsevents@2.3.3": true,
+    "prisma@7.6.0": true,
+    "sharp@0.34.5": true
+  },
+  "overrides": {
+    "@auth/core": {
+      "nodemailer": "$nodemailer"
+    }
   }
 }
