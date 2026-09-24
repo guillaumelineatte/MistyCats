@@ -27,3 +27,8 @@ yarn-error.log*
 
 # uploaded images
 /public/uploads
+
+# playwright
+/test-results
+/playwright-report
+/playwright/.cache

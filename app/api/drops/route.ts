@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { dropSchema } from "@/lib/validations/drop"
 import { eurosToCents } from "@/lib/money"
+import { requireAdmin } from "@/lib/require-admin"
 
 function slugify(title: string) {
   return title
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
   await autoPublishScheduled()
 
   const session = await auth()
-  const isAdmin = !!session
+  const isAdmin = session?.user?.role === "ADMIN"
 
   const { searchParams } = req.nextUrl
   const page = Math.max(1, Number(searchParams.get("page") ?? 1))
@@ -63,10 +64,8 @@ export async function GET(req: NextRequest) {
 
 // POST /api/drops — création (admin uniquement)
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
-  }
+  const check = await requireAdmin()
+  if ("error" in check) return check.error
 
   const body = await req.json()
   const parsed = dropSchema.safeParse(body)

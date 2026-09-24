@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { articleSchema } from "@/lib/validations/article"
 import { eurosToCents } from "@/lib/money"
+import { requireAdmin } from "@/lib/require-admin"
 
 // GET /api/articles — liste paginée
 // Paramètres : ?published=true&page=1&limit=20&category=colliers (slug)
@@ -38,10 +38,8 @@ export async function GET(req: NextRequest) {
 
 // POST /api/articles — création (admin uniquement)
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
-  }
+  const check = await requireAdmin()
+  if ("error" in check) return check.error
 
   const body = await req.json()
   const parsed = articleSchema.safeParse(body)

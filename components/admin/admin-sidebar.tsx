@@ -4,13 +4,18 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
-import { LayoutList, Layers, LogOut, ExternalLink, Menu, X } from "lucide-react"
+import { LayoutDashboard, LayoutList, Layers, Tag, ShoppingBag, Users, Inbox, LogOut, ExternalLink, Menu, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
 const navItems = [
+  { href: "/admin", label: "Tableau de bord", icon: LayoutDashboard, exact: true },
   { href: "/admin/articles", label: "Articles", icon: LayoutList },
+  { href: "/admin/categories", label: "Catégories", icon: Tag },
   { href: "/admin/drops", label: "Drops", icon: Layers },
+  { href: "/admin/orders", label: "Commandes", icon: ShoppingBag },
+  { href: "/admin/customers", label: "Clientes", icon: Users },
+  { href: "/admin/inbox", label: "Boîte de réception", icon: Inbox },
 ]
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
@@ -37,8 +42,8 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map(({ href, label, icon: Icon }) => {
-          const isActive = pathname.startsWith(href)
+        {navItems.map(({ href, label, icon: Icon, exact }) => {
+          const isActive = exact ? pathname === href : pathname.startsWith(href)
           return (
             <Link
               key={href}

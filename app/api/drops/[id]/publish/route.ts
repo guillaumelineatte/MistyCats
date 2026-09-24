@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { requireAdmin } from "@/lib/require-admin"
 
 interface Params {
   params: Promise<{ id: string }>
@@ -8,8 +8,8 @@ interface Params {
 
 // PATCH /api/drops/:id/publish — publication immédiate (admin)
 export async function PATCH(req: NextRequest, { params }: Params) {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
+  const check = await requireAdmin()
+  if ("error" in check) return check.error
 
   const { id } = await params
 

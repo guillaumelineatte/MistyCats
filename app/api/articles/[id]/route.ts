@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { articleSchema } from "@/lib/validations/article"
 import { eurosToCents } from "@/lib/money"
+import { requireAdmin } from "@/lib/require-admin"
 
-// GET /api/articles/:id
+// GET /api/articles/:id — admin uniquement (peut renvoyer une pièce DRAFT/ARCHIVED).
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const check = await requireAdmin()
+  if ("error" in check) return check.error
+
   const { id } = await params
   const article = await prisma.article.findUnique({
     where: { id },
@@ -27,10 +30,8 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth()
-  if (!session) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
-  }
+  const check = await requireAdmin()
+  if ("error" in check) return check.error
 
   const { id } = await params
   const body = await req.json()
@@ -75,10 +76,8 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth()
-  if (!session) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
-  }
+  const check = await requireAdmin()
+  if ("error" in check) return check.error
 
   const { id } = await params
   const existing = await prisma.article.findUnique({ where: { id } })

@@ -176,3 +176,23 @@ est `mistycates` (id `square-fire-43209862`).
   d'événements manuels sont une action admin, phase 8. Vérifié en conditions réelles : achat complet →
   `Shipment`/premier événement créés → suivi renvoie la bonne timeline → mauvais email rejeté (404 générique,
   n'indique pas lequel des deux champs est faux).
+- **D9 (24/09/2026, phase 7-8)** — **Faille de sécurité corrigée** : les routes API admin (`/api/articles`,
+  `/api/drops*`, `/api/upload`) ne vérifiaient que `session` existante, jamais `role === "ADMIN"` — et
+  `proxy.ts` ne les couvre pas (son `matcher` ne liste que `/admin/:path*`, pas `/api/articles*`/`/api/drops*`).
+  N'importe quelle cliente CUSTOMER connectée pouvait créer/modifier/supprimer des articles et des drops via
+  l'API. Corrigé avec `lib/require-admin.ts` (`requireAdmin()`), appliqué à chaque route admin (articles, drops,
+  upload, catégories, commandes, boîte de réception) ET dans `app/(admin)/layout.tsx` (défense en profondeur,
+  en plus de `proxy.ts` qui reste volontairement sans accès DB). Le test Playwright écrit pour vérifier cette
+  protection (`e2e/admin-protection.spec.ts`) a lui-même révélé un deuxième bug réel : une boucle de
+  redirection infinie pour toute cliente CUSTOMER connectée visitant `/admin/*` (la règle « rediriger les
+  admins déjà connectés hors de `/admin/login` » dans `proxy.ts` ne vérifiait pas non plus le rôle). Les deux
+  corrigés et vérifiés par le test (3/3 verts, contre un vrai build + serveur + la vraie base).
+  Playwright installé à cette occasion (`npx playwright install chromium`), prévu par le plan pour cette phase.
+  — Reste du périmètre : tableau de bord (`/admin`, agrégats réels), CRUD catégories avec ordre (flèches
+  haut/bas plutôt que glisser-déposer — plus simple, sans dnd-kit, pour un nombre de catégories toujours
+  faible), commandes (liste filtrée par statut, détail, changement de statut, saisie transporteur/suivi qui
+  déclenche l'email d'expédition, ajout manuel d'événements, bon de livraison PDF via `pdf-lib`), clientes
+  (lecture seule + leurs commandes/adresses), boîte de réception (`ContactMessage`/`CustomRequest`, marquage
+  traité — vide tant que les formulaires publics n'existent pas, phase 9). Tout vérifié en conditions réelles :
+  connexion admin réelle (flux CSRF NextAuth), création de catégorie, achat → expédition → email envoyé → bon
+  de livraison PDF valide, et confirmation que l'anonyme est rejeté sur chaque nouvelle route (401).

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { dropSchema } from "@/lib/validations/drop"
 import { eurosToCents } from "@/lib/money"
+import { requireAdmin } from "@/lib/require-admin"
 
 function slugify(title: string) {
   return title
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   })
 
   if (!drop) return NextResponse.json({ error: "Introuvable" }, { status: 404 })
-  if (!drop.published && !session) {
+  if (!drop.published && session?.user?.role !== "ADMIN") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 403 })
   }
 
@@ -39,8 +40,8 @@ export async function GET(req: NextRequest, { params }: Params) {
 
 // PUT /api/drops/:id — mise à jour complète (admin)
 export async function PUT(req: NextRequest, { params }: Params) {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
+  const check = await requireAdmin()
+  if ("error" in check) return check.error
 
   const { id } = await params
   const body = await req.json()
@@ -169,8 +170,8 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
 // DELETE /api/drops/:id — suppression (admin)
 export async function DELETE(req: NextRequest, { params }: Params) {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
+  const check = await requireAdmin()
+  if ("error" in check) return check.error
 
   const { id } = await params
 

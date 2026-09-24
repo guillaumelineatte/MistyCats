@@ -1,8 +1,17 @@
+import { redirect } from "next/navigation"
+import { auth } from "@/lib/auth"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
 import { SessionProvider } from "@/components/admin/session-provider"
 import { Toaster } from "@/components/ui/sonner"
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+// proxy.ts protège déjà /admin/* mais reste volontairement sans accès DB (edge-safe) ;
+// ce contrôle ici est la défense en profondeur qui couvre chaque page admin.
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth()
+  if (!session?.user || session.user.role !== "ADMIN") {
+    redirect("/admin/login")
+  }
+
   return (
     <SessionProvider>
       <div className="min-h-screen bg-background">

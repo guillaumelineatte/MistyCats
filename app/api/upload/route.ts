@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { put } from "@vercel/blob"
 import path from "path"
+import { requireAdmin } from "@/lib/require-admin"
 
 const MAX_SIZE = 5 * 1024 * 1024 // 5 MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
-  }
+  const check = await requireAdmin()
+  if ("error" in check) return check.error
 
   const formData = await req.formData()
   const file = formData.get("file") as File | null

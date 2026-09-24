@@ -33,8 +33,10 @@ export default auth((req) => {
     )
   }
 
-  // Rediriger les admins déjà connectés hors de la page login admin
-  if (isLoggedIn && pathname === "/admin/login") {
+  // Rediriger les admins déjà connectés hors de la page login admin — une
+  // cliente CUSTOMER connectée doit pouvoir voir cette page sans boucle de
+  // redirection avec la règle /admin/* ci-dessus.
+  if (isLoggedIn && role === "ADMIN" && pathname === "/admin/login") {
     return NextResponse.redirect(new URL("/admin/articles", req.nextUrl))
   }
 
