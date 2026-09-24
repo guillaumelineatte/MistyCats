@@ -3,7 +3,12 @@ import { defineConfig } from "@playwright/test"
 
 export default defineConfig({
   testDir: "./e2e",
-  fullyParallel: true,
+  // Ces tests tournent contre la vraie base Neon (pas de branche de test éphémère
+  // dans ce projet) via une connexion non poolée : en parallèle, plusieurs
+  // connexions simultanées (login, requêtes DB par page) saturent le pool et
+  // font timeout des requêtes sans rapport avec le code testé. Un seul worker.
+  fullyParallel: false,
+  workers: 1,
   retries: 0,
   reporter: [["list"]],
   use: {

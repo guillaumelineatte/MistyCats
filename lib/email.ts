@@ -219,3 +219,39 @@ export async function sendOrderDeliveredEmail(to: string, order: { number: strin
     })
   )
 }
+
+export async function sendNewContactMessageNotification(
+  to: string,
+  message: { name: string; email: string; subject: string | null; message: string }
+) {
+  await deliver(
+    to,
+    "Nouveau message de contact — Misty Cats",
+    renderLayout({
+      heading: "Nouveau message de contact",
+      bodyHtml: `De : <strong>${message.name}</strong> (${message.email})<br />
+        ${message.subject ? `Sujet : ${message.subject}<br /><br />` : "<br />"}
+        ${message.message.replace(/\n/g, "<br />")}`,
+      ctaLabel: "Voir dans la boîte de réception",
+      ctaUrl: `${baseUrl()}/admin/inbox`,
+    })
+  )
+}
+
+export async function sendNewCustomRequestNotification(
+  to: string,
+  request: { name: string; email: string; description: string; budget: string | null }
+) {
+  await deliver(
+    to,
+    "Nouvelle demande sur-mesure — Misty Cats",
+    renderLayout({
+      heading: "Nouvelle demande sur-mesure",
+      bodyHtml: `De : <strong>${request.name}</strong> (${request.email})<br />
+        ${request.budget ? `Budget indiqué : ${request.budget}<br /><br />` : "<br />"}
+        ${request.description.replace(/\n/g, "<br />")}`,
+      ctaLabel: "Voir dans la boîte de réception",
+      ctaUrl: `${baseUrl()}/admin/inbox`,
+    })
+  )
+}

@@ -196,3 +196,19 @@ est `mistycates` (id `square-fire-43209862`).
   traité — vide tant que les formulaires publics n'existent pas, phase 9). Tout vérifié en conditions réelles :
   connexion admin réelle (flux CSRF NextAuth), création de catégorie, achat → expédition → email envoyé → bon
   de livraison PDF valide, et confirmation que l'anonyme est rejeté sur chaque nouvelle route (401).
+- **D10 (24/09/2026, phase 9)** — Espace client complet : historique/détail de commande (`/mon-compte/commandes`,
+  bouton « Bientôt » retiré — c'était un choix assumé documenté en phase 0, maintenant réellement branché) avec
+  timeline de suivi. Vérification de propriété systématique (`order.userId !== session.user.id` → 404) car le
+  numéro de commande est séquentiel donc devinable — test Playwright IDOR (`e2e/order-ownership.spec.ts`) qui
+  crée deux clientes et une commande, vérifie que la propriétaire y accède et qu'une autre cliente authentifiée
+  obtient un 404 en changeant juste l'URL. Formulaires publics contact (`/contact`) et sur-mesure (`/sur-mesure`)
+  — stockage en base + email de notification interne à `siteConfig.contact.email`, rate-limités. RGPD dans
+  `/mon-compte/confidentialite` : export JSON complet (profil, adresses, commandes, messages) et suppression de
+  compte (confirmée par mot de passe) — les commandes sont anonymisées (`userId` détaché, email conservé) plutôt
+  que supprimées pour l'intégrité comptable, adresses/panier/tokens supprimés en cascade par le schéma. Tout
+  vérifié en conditions réelles contre la vraie base : export téléchargé, mauvais mot de passe rejeté, suppression
+  réussie avec commande anonymisée confirmée en base après coup.
+  — Note sur l'exécution des tests Playwright : `playwright.config.ts` force `workers: 1` — en parallèle, plusieurs
+  connexions simultanées vers la vraie base Neon (non poolée, pas de branche de test dédiée dans ce projet)
+  saturent le pool et font échouer des requêtes sans rapport avec le code testé (découvert en écrivant cette
+  phase : la suite passait isolée mais échouait en parallèle avec la phase 7-8, pas un bug applicatif).

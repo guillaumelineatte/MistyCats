@@ -6,6 +6,7 @@ type AuthEvent =
   | "password_reset_requested"
   | "password_reset_completed"
   | "password_changed"
+  | "account_deleted"
 
 /**
  * Journalisation structurée des événements d'auth (stdout — capté par les

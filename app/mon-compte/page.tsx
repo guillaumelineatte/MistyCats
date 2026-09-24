@@ -59,12 +59,11 @@ export default async function MonComptePage() {
 
         <Link
           href="/mon-compte/commandes"
-          className="group border border-border p-6 hover:border-foreground transition-colors opacity-50 pointer-events-none"
-          aria-disabled
+          className="group border border-border p-6 hover:border-foreground transition-colors"
         >
-          <Package className="h-5 w-5 mb-4 text-muted-foreground" />
+          <Package className="h-5 w-5 mb-4 text-muted-foreground group-hover:text-foreground transition-colors" />
           <p className="text-sm font-medium tracking-wider uppercase">Mes commandes</p>
-          <p className="text-xs text-muted-foreground mt-1">Bientôt disponible</p>
+          <p className="text-xs text-muted-foreground mt-1">Historique et suivi</p>
         </Link>
       </div>
     </div>

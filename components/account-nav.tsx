@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
-import { User, KeyRound, Package, MapPin, LogOut } from "lucide-react"
+import { User, KeyRound, Package, MapPin, ShieldCheck, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
@@ -11,7 +11,8 @@ const navItems = [
   { href: "/mon-compte/profil", label: "Mon profil", icon: User },
   { href: "/mon-compte/adresses", label: "Mes adresses", icon: MapPin },
   { href: "/mon-compte/mot-de-passe", label: "Mot de passe", icon: KeyRound },
-  { href: "/mon-compte/commandes", label: "Commandes", icon: Package, disabled: true },
+  { href: "/mon-compte/commandes", label: "Commandes", icon: Package },
+  { href: "/mon-compte/confidentialite", label: "Confidentialité", icon: ShieldCheck },
 ]
 
 export function AccountNav() {
@@ -29,24 +30,14 @@ export function AccountNav() {
         return (
           <Link
             key={item.href}
-            href={item.disabled ? "#" : item.href}
+            href={item.href}
             className={cn(
               "flex items-center gap-3 px-3 py-2 text-sm transition-colors",
-              item.disabled
-                ? "text-muted-foreground/50 cursor-not-allowed pointer-events-none"
-                : isActive
-                ? "text-foreground font-medium"
-                : "text-muted-foreground hover:text-foreground"
+              isActive ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"
             )}
-            aria-disabled={item.disabled}
           >
             {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
             <span>{item.label}</span>
-            {item.disabled && (
-              <span className="ml-auto text-[10px] tracking-wider uppercase text-muted-foreground/50">
-                Bientôt
-              </span>
-            )}
           </Link>
         )
       })}
