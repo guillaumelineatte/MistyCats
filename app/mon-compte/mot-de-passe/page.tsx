@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { signOut } from "next-auth/react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
@@ -41,8 +42,10 @@ export default function MotDePassePage() {
       return
     }
 
-    toast.success("Mot de passe modifié")
-    form.reset()
+    toast.success("Mot de passe modifié. Reconnexion nécessaire…")
+    // tokenVersion vient d'être incrémenté côté serveur : la session en
+    // cours est maintenant considérée périmée, on reconnecte proprement.
+    await signOut({ callbackUrl: "/login" })
   }
 
   return (
@@ -81,7 +84,7 @@ export default function MotDePassePage() {
                 </FormControl>
                 <FormMessage />
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  8 caractères minimum, une majuscule, un chiffre
+                  12 caractères minimum, une majuscule, un chiffre
                 </p>
               </FormItem>
             )}

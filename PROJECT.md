@@ -8,7 +8,8 @@
 - **Style** : Tailwind CSS v4 (`@theme inline`, tokens OKLCH dans `app/globals.css`), shadcn/ui (`components/ui/*`)
 - **Base de données** : PostgreSQL (Neon), Prisma ORM 7.6 (`prisma/schema.prisma`)
 - **Auth** : NextAuth v5 beta.30, provider Credentials (email/mot de passe), sessions JWT
-- **Email** : nodemailer (SMTP), utilisé uniquement pour la réinitialisation de mot de passe (`lib/email.ts`)
+- **Email** : nodemailer (SMTP), layout HTML partagé (`lib/email.ts`) ; sans `SMTP_HOST`, écrit dans
+  `os.tmpdir()/mistycats-mail` + console (jamais dans le dépôt, filesystem Vercel en lecture seule)
 - **Déploiement** : Vercel (projet `mistycats`, org `lineatteg-gmailcoms-projects`)
 - **Package manager** : npm (`package-lock.json`) — pas pnpm, malgré la convention pnpm mentionnée dans certains briefs de mission
 - **Origine** : projet initialement généré via v0.dev (`package.json` name: `my-v0-project`)
@@ -96,3 +97,18 @@ est `mistycates` (id `square-fire-43209862`).
   `OrderItem.articleId` empêchera toute suppression réelle d'une pièce déjà vendue une fois les commandes en place
   (phase 5). Compte admin (`admin@mistycats.fr`) créé/mis à jour via `npm run db:seed:admin` (idempotent, lit
   `ADMIN_EMAIL`/`ADMIN_PASSWORD`).
+- **D4 (24/09/2026, phase 2)** — Durcissement auth complet, vérifié en conditions réelles (inscription, lien de
+  vérification, réutilisation rejetée, rate limit, HIBP — contre la vraie base Neon, comptes de test nettoyés
+  ensuite). `User.resetToken`/`resetTokenExpiry` (clair) supprimés, remplacés par `VerificationToken` (hashé SHA-256,
+  usage unique, expirant, un seul actif par type/utilisateur). Mot de passe : 12 caractères minimum (au lieu de 8),
+  + vérification k-anonymity contre l'API Have I Been Pwned (`lib/pwned-password.ts`, fail-open si l'API est
+  injoignable — jamais bloquant sur un problème réseau). Rate limiting maison sur `RateLimitHit` (Postgres, fenêtre
+  fixe, pas de Redis) : login (10/5 min par IP et par email), inscription (5/h par IP), reset et renvoi de
+  vérification. `User.tokenVersion` incrémenté à chaque changement de mot de passe → `lib/session-freshness.ts`
+  (`isSessionFresh`) revérifie ce compteur dans les routes sensibles déjà en place (`/api/user/password`,
+  `/api/user/profile`, `/api/user/address/[type]`) ; la page de changement de mot de passe déconnecte
+  immédiatement l'utilisateur après succès (JWT devenu périmé). Changer d'email dans le profil réinitialise
+  `emailVerified` et renvoie un email de confirmation. CSRF : cookie de session `sameSite: "lax"` + `httpOnly` +
+  `secure` (prod) explicite dans `lib/auth.config.ts` — pas de librairie de token CSRF séparée (voir raisonnement
+  dans le plan de session). Événements loggés en JSON sur stdout (`lib/auth-log.ts`) : register, login
+  success/failure, email vérifié, password reset demandé/complété, password changé.

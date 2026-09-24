@@ -24,6 +24,7 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl") ?? "/mon-compte"
+  const verification = searchParams.get("verification")
   const [error, setError] = useState<string | null>(null)
 
   const form = useForm<LoginInput>({
@@ -70,6 +71,17 @@ function LoginForm() {
             Connectez-vous à votre compte
           </p>
         </div>
+
+        {verification === "success" && (
+          <p className="mb-6 text-sm text-center text-green-700 bg-green-50 border border-green-200 py-2.5 px-3">
+            Email confirmé. Vous pouvez vous connecter.
+          </p>
+        )}
+        {verification === "invalid" && (
+          <p className="mb-6 text-sm text-center text-destructive bg-destructive/5 border border-destructive/20 py-2.5 px-3">
+            Ce lien de confirmation est invalide ou a expiré.
+          </p>
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">

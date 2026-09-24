@@ -21,8 +21,6 @@ model User {
   role             Role      @default(CUSTOMER)
   emailVerified    DateTime?
   tokenVersion     Int       @default(0)
-  resetToken       String?   @unique
-  resetTokenExpiry DateTime?
   addresses        Address[]
 
   cart               Cart?

@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { auth } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
 import { SessionProvider } from "@/components/admin/session-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { AccountNav } from "@/components/account-nav"
+import { EmailVerificationBanner } from "@/components/email-verification-banner"
 
 export default async function MonCompteLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
@@ -11,6 +13,11 @@ export default async function MonCompteLayout({ children }: { children: React.Re
   if (!session?.user) {
     redirect("/login?callbackUrl=/mon-compte")
   }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { email: true, emailVerified: true },
+  })
 
   return (
     <SessionProvider>
@@ -35,7 +42,10 @@ export default async function MonCompteLayout({ children }: { children: React.Re
             <AccountNav />
 
             {/* Contenu principal */}
-            <main>{children}</main>
+            <main>
+              {user && !user.emailVerified && <EmailVerificationBanner email={user.email} />}
+              {children}
+            </main>
           </div>
         </div>
       </div>

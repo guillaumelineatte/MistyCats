@@ -118,7 +118,7 @@ function InscriptionForm() {
                   </FormControl>
                   <FormMessage />
                   <p className="text-[11px] text-muted-foreground mt-1">
-                    8 caractères minimum, une majuscule, un chiffre
+                    12 caractères minimum, une majuscule, un chiffre
                   </p>
                 </FormItem>
               )}

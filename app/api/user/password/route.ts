@@ -3,11 +3,18 @@ import bcrypt from "bcryptjs"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { changePasswordSchema } from "@/lib/validations/auth"
+import { isSessionFresh } from "@/lib/session-freshness"
+import { isPasswordPwned } from "@/lib/pwned-password"
+import { sendPasswordChangedEmail } from "@/lib/email"
+import { logAuthEvent } from "@/lib/auth-log"
 
 export async function PUT(req: Request) {
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
+  }
+  if (!(await isSessionFresh(session))) {
+    return NextResponse.json({ error: "Session expirée, reconnectez-vous." }, { status: 401 })
   }
 
   try {
@@ -39,12 +46,26 @@ export async function PUT(req: Request) {
       )
     }
 
+    if (await isPasswordPwned(newPassword)) {
+      return NextResponse.json(
+        {
+          error:
+            "Ce mot de passe a été exposé dans une fuite de données connue. Choisissez-en un autre pour votre sécurité.",
+        },
+        { status: 400 }
+      )
+    }
+
     const passwordHash = await bcrypt.hash(newPassword, 12)
 
+    // tokenVersion++ invalide les autres sessions actives de ce compte.
     await prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash },
+      data: { passwordHash, tokenVersion: { increment: 1 } },
     })
+
+    logAuthEvent("password_changed", { userId: user.id })
+    await sendPasswordChangedEmail(user.email)
 
     return NextResponse.json({ success: true })
   } catch {

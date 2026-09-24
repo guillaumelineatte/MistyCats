@@ -2,6 +2,10 @@ import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { resetPasswordSchema } from "@/lib/validations/auth"
+import { consumeVerificationToken } from "@/lib/verification-tokens"
+import { sendPasswordChangedEmail } from "@/lib/email"
+import { isPasswordPwned } from "@/lib/pwned-password"
+import { logAuthEvent } from "@/lib/auth-log"
 
 export async function POST(req: Request) {
   try {
@@ -20,11 +24,18 @@ export async function POST(req: Request) {
       )
     }
 
-    const user = await prisma.user.findUnique({
-      where: { resetToken: token },
-    })
+    if (await isPasswordPwned(result.data.password)) {
+      return NextResponse.json(
+        {
+          error:
+            "Ce mot de passe a été exposé dans une fuite de données connue. Choisissez-en un autre pour votre sécurité.",
+        },
+        { status: 400 }
+      )
+    }
 
-    if (!user || !user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
+    const userId = await consumeVerificationToken(token, "PASSWORD_RESET")
+    if (!userId) {
       return NextResponse.json(
         { error: "Ce lien est invalide ou a expiré. Veuillez en demander un nouveau." },
         { status: 400 }
@@ -33,14 +44,13 @@ export async function POST(req: Request) {
 
     const passwordHash = await bcrypt.hash(result.data.password, 12)
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        passwordHash,
-        resetToken: null,
-        resetTokenExpiry: null,
-      },
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash, tokenVersion: { increment: 1 } },
     })
+
+    logAuthEvent("password_reset_completed", { userId })
+    await sendPasswordChangedEmail(user.email)
 
     return NextResponse.json({ success: true })
   } catch {

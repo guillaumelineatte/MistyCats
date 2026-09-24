@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { addressSchema } from "@/lib/validations/auth"
+import { isSessionFresh } from "@/lib/session-freshness"
 
 type Params = Promise<{ type: string }>
 
@@ -32,6 +33,9 @@ export async function PUT(req: Request, { params }: { params: Params }) {
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
+  }
+  if (!(await isSessionFresh(session))) {
+    return NextResponse.json({ error: "Session expirée, reconnectez-vous." }, { status: 401 })
   }
 
   const { type: rawType } = await params

@@ -1,4 +1,7 @@
 import nodemailer from "nodemailer"
+import { mkdir, writeFile } from "fs/promises"
+import path from "path"
+import os from "os"
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -10,102 +13,149 @@ const transporter = nodemailer.createTransport({
   },
 })
 
-export async function sendPasswordResetEmail(to: string, token: string) {
-  const baseUrl = process.env.AUTH_URL ?? "http://localhost:3000"
-  const resetUrl = `${baseUrl}/reinitialiser-mot-de-passe/${token}`
+function baseUrl() {
+  return process.env.AUTH_URL ?? "http://localhost:3000"
+}
 
-  // En développement sans SMTP configuré : log dans la console
+/** Layout partagé par tous les emails transactionnels — une seule mise en page, pas six. */
+function renderLayout(opts: {
+  heading: string
+  bodyHtml: string
+  ctaLabel?: string
+  ctaUrl?: string
+  footerHtml?: string
+}) {
+  return `
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head><meta charset="UTF-8"></head>
+    <body style="font-family: Georgia, serif; background: #faf9f7; margin: 0; padding: 40px 20px;">
+      <div style="max-width: 480px; margin: 0 auto; background: #fff; padding: 48px 40px;">
+        <h1 style="font-size: 22px; letter-spacing: 0.3em; text-transform: uppercase; font-weight: 300; margin: 0 0 8px;">
+          Misty Cats
+        </h1>
+        <p style="font-size: 11px; letter-spacing: 0.4em; text-transform: uppercase; color: #9a9a8a; margin: 0 0 40px;">
+          Bijoux Upcyclés
+        </p>
+
+        <h2 style="font-size: 16px; font-weight: 400; margin: 0 0 16px;">
+          ${opts.heading}
+        </h2>
+        <div style="font-size: 14px; line-height: 1.7; color: #555; margin: 0 0 32px;">
+          ${opts.bodyHtml}
+        </div>
+
+        ${
+          opts.ctaUrl && opts.ctaLabel
+            ? `<a href="${opts.ctaUrl}"
+                 style="display: inline-block; background: #1a1a1a; color: #fff; text-decoration: none;
+                        font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+                        padding: 14px 32px;">
+                ${opts.ctaLabel}
+              </a>`
+            : ""
+        }
+
+        ${
+          opts.footerHtml
+            ? `<p style="font-size: 12px; color: #9a9a8a; margin: 32px 0 0; line-height: 1.6;">${opts.footerHtml}</p>`
+            : ""
+        }
+      </div>
+    </body>
+    </html>
+  `
+}
+
+/**
+ * Envoie l'email, ou en mode dégradé (pas de SMTP_HOST configuré) l'écrit en
+ * console ET dans un fichier HTML consultable — seul mode dégradé autorisé,
+ * jamais un envoi silencieusement ignoré. Écrit dans os.tmpdir(), jamais dans
+ * le dépôt : le système de fichiers de déploiement Vercel est en lecture
+ * seule hors /tmp (voir app/api/upload/route.ts pour le même piège).
+ */
+async function deliver(to: string, subject: string, html: string) {
   if (!process.env.SMTP_HOST) {
-    console.log(`\n[DEV] Lien de réinitialisation de mot de passe :\n${resetUrl}\n`)
+    const dir = path.join(os.tmpdir(), "mistycats-mail")
+    const filename = `${Date.now()}-${to.replace(/[^a-z0-9]/gi, "_")}.html`
+    const filePath = path.join(dir, filename)
+    try {
+      await mkdir(dir, { recursive: true })
+      await writeFile(filePath, html, "utf8")
+      console.log(`\n[DEV] Email « ${subject} » à ${to} (SMTP non configuré) → ${filePath}\n`)
+    } catch (err) {
+      console.log(`\n[DEV] Email « ${subject} » à ${to} (SMTP non configuré, écriture fichier échouée) :`, err)
+    }
     return
   }
 
   await transporter.sendMail({
     from: process.env.SMTP_FROM ?? "noreply@mistycats.fr",
     to,
-    subject: "Réinitialisation de votre mot de passe — Misty Cats",
-    html: `
-      <!DOCTYPE html>
-      <html lang="fr">
-      <head><meta charset="UTF-8"></head>
-      <body style="font-family: Georgia, serif; background: #faf9f7; margin: 0; padding: 40px 20px;">
-        <div style="max-width: 480px; margin: 0 auto; background: #fff; padding: 48px 40px;">
-          <h1 style="font-size: 22px; letter-spacing: 0.3em; text-transform: uppercase; font-weight: 300; margin: 0 0 8px;">
-            Misty Cats
-          </h1>
-          <p style="font-size: 11px; letter-spacing: 0.4em; text-transform: uppercase; color: #9a9a8a; margin: 0 0 40px;">
-            Bijoux Upcyclés
-          </p>
-
-          <h2 style="font-size: 16px; font-weight: 400; margin: 0 0 16px;">
-            Réinitialisation de votre mot de passe
-          </h2>
-          <p style="font-size: 14px; line-height: 1.7; color: #555; margin: 0 0 32px;">
-            Vous avez demandé à réinitialiser le mot de passe de votre compte Misty Cats.
-            Cliquez sur le bouton ci-dessous pour en créer un nouveau.
-            Ce lien est valable pendant <strong>1 heure</strong>.
-          </p>
-
-          <a href="${resetUrl}"
-             style="display: inline-block; background: #1a1a1a; color: #fff; text-decoration: none;
-                    font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
-                    padding: 14px 32px;">
-            Réinitialiser mon mot de passe
-          </a>
-
-          <p style="font-size: 12px; color: #9a9a8a; margin: 32px 0 0; line-height: 1.6;">
-            Si vous n'avez pas fait cette demande, ignorez simplement cet email.
-            Votre mot de passe restera inchangé.
-          </p>
-        </div>
-      </body>
-      </html>
-    `,
+    subject,
+    html,
   })
 }
 
-export async function sendNewsletterConfirmationEmail(to: string, unsubscribeToken: string) {
-  const baseUrl = process.env.AUTH_URL ?? "http://localhost:3000"
-  const unsubscribeUrl = `${baseUrl}/api/newsletter/unsubscribe?token=${unsubscribeToken}`
+export async function sendPasswordResetEmail(to: string, token: string) {
+  const resetUrl = `${baseUrl()}/reinitialiser-mot-de-passe/${token}`
 
-  // En développement sans SMTP configuré : log dans la console
-  if (!process.env.SMTP_HOST) {
-    console.log(`\n[DEV] Inscription newsletter confirmée pour ${to}. Désinscription : ${unsubscribeUrl}\n`)
-    return
-  }
-
-  await transporter.sendMail({
-    from: process.env.SMTP_FROM ?? "noreply@mistycats.fr",
+  await deliver(
     to,
-    subject: "Bienvenue dans la newsletter Misty Cats",
-    html: `
-      <!DOCTYPE html>
-      <html lang="fr">
-      <head><meta charset="UTF-8"></head>
-      <body style="font-family: Georgia, serif; background: #faf9f7; margin: 0; padding: 40px 20px;">
-        <div style="max-width: 480px; margin: 0 auto; background: #fff; padding: 48px 40px;">
-          <h1 style="font-size: 22px; letter-spacing: 0.3em; text-transform: uppercase; font-weight: 300; margin: 0 0 8px;">
-            Misty Cats
-          </h1>
-          <p style="font-size: 11px; letter-spacing: 0.4em; text-transform: uppercase; color: #9a9a8a; margin: 0 0 40px;">
-            Bijoux Upcyclés
-          </p>
+    "Réinitialisation de votre mot de passe — Misty Cats",
+    renderLayout({
+      heading: "Réinitialisation de votre mot de passe",
+      bodyHtml: `Vous avez demandé à réinitialiser le mot de passe de votre compte Misty Cats.
+        Cliquez sur le bouton ci-dessous pour en créer un nouveau. Ce lien est valable pendant
+        <strong>1 heure</strong>.`,
+      ctaLabel: "Réinitialiser mon mot de passe",
+      ctaUrl: resetUrl,
+      footerHtml: "Si vous n'avez pas fait cette demande, ignorez simplement cet email. Votre mot de passe restera inchangé.",
+    })
+  )
+}
 
-          <h2 style="font-size: 16px; font-weight: 400; margin: 0 0 16px;">
-            Inscription confirmée
-          </h2>
-          <p style="font-size: 14px; line-height: 1.7; color: #555; margin: 0 0 32px;">
-            Merci de votre inscription. Vous recevrez nos nouvelles collections, nos histoires de création et des
-            offres exclusives.
-          </p>
+export async function sendPasswordChangedEmail(to: string) {
+  await deliver(
+    to,
+    "Votre mot de passe a été modifié — Misty Cats",
+    renderLayout({
+      heading: "Mot de passe modifié",
+      bodyHtml: `Le mot de passe de votre compte Misty Cats vient d'être modifié. Vos autres sessions
+        actives ont été déconnectées par sécurité.`,
+      footerHtml: "Si vous n'êtes pas à l'origine de ce changement, contactez-nous immédiatement.",
+    })
+  )
+}
 
-          <p style="font-size: 12px; color: #9a9a8a; margin: 32px 0 0; line-height: 1.6;">
-            Vous pouvez vous désinscrire à tout moment en
-            <a href="${unsubscribeUrl}" style="color: #9a9a8a;">cliquant ici</a>.
-          </p>
-        </div>
-      </body>
-      </html>
-    `,
-  })
+export async function sendVerificationEmail(to: string, token: string) {
+  const verifyUrl = `${baseUrl()}/api/auth/verify-email/${token}`
+
+  await deliver(
+    to,
+    "Confirmez votre adresse email — Misty Cats",
+    renderLayout({
+      heading: "Confirmez votre adresse email",
+      bodyHtml: `Bienvenue chez Misty Cats. Confirmez votre adresse email pour activer votre compte et
+        pouvoir passer commande. Ce lien est valable pendant <strong>24 heures</strong>.`,
+      ctaLabel: "Confirmer mon email",
+      ctaUrl: verifyUrl,
+      footerHtml: "Si vous n'êtes pas à l'origine de cette inscription, ignorez simplement cet email.",
+    })
+  )
+}
+
+export async function sendNewsletterConfirmationEmail(to: string, unsubscribeToken: string) {
+  const unsubscribeUrl = `${baseUrl()}/api/newsletter/unsubscribe?token=${unsubscribeToken}`
+
+  await deliver(
+    to,
+    "Bienvenue dans la newsletter Misty Cats",
+    renderLayout({
+      heading: "Inscription confirmée",
+      bodyHtml: `Merci de votre inscription. Vous recevrez nos nouvelles collections, nos histoires de
+        création et des offres exclusives.`,
+      footerHtml: `Vous pouvez vous désinscrire à tout moment en <a href="${unsubscribeUrl}" style="color: #9a9a8a;">cliquant ici</a>.`,
+    })
+  )
 }
