@@ -226,3 +226,10 @@ est `mistycates` (id `square-fire-43209862`).
   dans `AUDIT.md` section 4 : identité légale de la cliente, relecture juridique, vrai numéro de téléphone du
   magasin (incohérence affichage/lien jamais résolue faute de confirmation), vraies photos, passage à Stripe,
   configuration SMTP réelle.
+- **D12 (25/09/2026)** — Premier déploiement en production a échoué : le plan Vercel Hobby refuse tout cron plus
+  fréquent que quotidien, or `vercel.json` demandait toutes les 5 minutes pour la libération des réservations
+  expirées. Passé à une exécution quotidienne (`0 4 * * *`) — sans impact sur la garantie pièce unique elle-même,
+  qui repose sur le verrou transactionnel et l'expiry paresseuse dans `lib/inventory.ts`, pas sur ce cron. Seul
+  effet : une pièce dont la réservation a expiré sans qu'aucune autre cliente ne la retente peut rester affichée
+  « réservée » jusqu'à 24h au lieu d'être immédiatement remise en ligne. Passer à une fréquence plus fine
+  nécessite un plan Pro.
